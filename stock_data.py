@@ -100,7 +100,7 @@ def input_stock_data(ticker, status):
           date, price, shares = input_value
           price = float(price)
           shares = float(shares)
-          stock_data.append((status, date, price, shares))
+          stock_data.append((ticker, status, date, price, shares))
 
     return stock_data
 
