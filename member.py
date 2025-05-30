@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 import json
 
-# 특수문자 존재하면 True 반환
+# 특수문자 존재하면 True 반환!
 def contains_special_char(s): 
     return bool(re.search(r'[^a-zA-Z0-9\s]', s)) # 특수문자를 의미하는 정규표현식: 알파벳, 숫자, 공백을 제외한 문자
 
