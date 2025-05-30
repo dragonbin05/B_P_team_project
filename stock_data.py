@@ -53,8 +53,7 @@ def is_only_english_regex(s: str) -> bool:
     """
     return bool(re.compile(r'^[A-Za-z]+$').fullmatch(s))
 
-if __name__ == "__main__":
-    
+def input_stock():
     while True:
         stock_name = input("회사명(영어) 또는 티커(영어)를 입력하세요: ")
 
@@ -73,5 +72,7 @@ if __name__ == "__main__":
               break
           else:
               continue
+          
+    return ticker
 
     
