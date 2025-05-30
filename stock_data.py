@@ -94,6 +94,3 @@ def input_stock_data(ticker, status):
           buy_stock_data.append((status, date, price, shares))
 
     return buy_stock_data
-
-p = input_stock()
-print(p)
