@@ -20,7 +20,7 @@ def csv_create():
         with open(f"{i}.csv", mode="a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             if not file_exists:
-                writer.writerow(["ticker", "date"])  # 헤더 작성
+                writer.writerow(["ticker", "status", "date", "price", "shares"])  # 헤더 작성
             # writer.writerow([id, pw])  # 사용자 정보 저장
 
 def csv_update(stockdata): #인자: 사용자 주식 정보 튜플
