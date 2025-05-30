@@ -2,8 +2,31 @@ import requests
 import yfinance as yf
 import re
 import string
+from openai import OpenAI
+
+client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key="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",
+)
 
 #써야 하는 함수: input_stock(), input_stock_data(ticker, status), closing_price(ticker, start_date, end_date)
+
+def find_company_with_LLM(user_input):
+    completion = client.chat.completions.create(
+    model="meta-llama/llama-3.3-8b-instruct:free",
+    messages=[
+        {
+        "role": 'system',
+        "content":"I'll give you a typo ticker or company name or etf name. As long as it's most similar to this, make sure to tell me the investment item by 'name'."
+        },
+        {
+        "role": "user",
+        "content": user_input
+        }
+    ]
+    )
+    return completion.choices[0].message.content
+
 def is_valid_ticker(ticker: str) -> bool:
     try:
         info = yf.Ticker(ticker).info
@@ -30,7 +53,7 @@ def resolve_to_ticker(query: str) -> tuple[str,str] | None:
     """
     - 유효한 티커라면 (ticker, company_name) 반환
     - 회사명 키워드 검색 결과가 있으면 첫 번째 (ticker, company_name) 반환
-    - 둘 다 아니면 None 반환
+    - 둘 다 아니면 (None, query.strip()) 반환
     """
     q = query.strip()
 
@@ -46,7 +69,7 @@ def resolve_to_ticker(query: str) -> tuple[str,str] | None:
         return matches[0]  # (ticker, company)
 
     # 3) 못 찾았을 때
-    return None
+    return (None, q)
 
 # 재사용 가능한 특수문자 패턴
 PUNCT = re.escape(string.punctuation)  
@@ -64,15 +87,15 @@ def is_only_english_or_special(s: str) -> bool:
 
 def input_stock():
     while True:
-        stock_name = input("회사명(영어) 또는 티커를 입력하세요: ")
+        stock_name = input("종목명(영어) 또는 티커를 입력하세요: ")
 
         if is_only_english_or_special(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
           print("입력을 다시 확인해 주세요.")
           continue
 
         result = resolve_to_ticker(stock_name)
-        if result == None:
-          print("입력을 다시 확인해 주세요.")
+        if result[0] == None:
+          print(f"입력을 다시 확인해 주세요. 혹시 {find_company_with_LLM(result[1])}을(를) 찾나요?")
           continue
         else:
           ticker, company_name = result
@@ -98,7 +121,7 @@ def input_stock_data(ticker, status):
           break
       else:
           date, price, shares = input_value
-          price = float(price)
+          price = float(price)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
           shares = float(shares)
           stock_data.append((ticker, status, date, price, shares))
 
