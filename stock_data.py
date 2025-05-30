@@ -1,6 +1,7 @@
 import requests
 import yfinance as yf
 import re
+import string
 
 def is_valid_ticker(ticker: str) -> bool:
     try:
@@ -46,19 +47,26 @@ def resolve_to_ticker(query: str) -> tuple[str,str] | None:
     # 3) 못 찾았을 때
     return None
 
-def is_only_english_regex(s: str) -> bool:
+# 재사용 가능한 특수문자 패턴
+PUNCT = re.escape(string.punctuation)  
+
+# 영어 알파벳 (A–Z, a–z) 혹은 특수문자만 허용
+_PATTERN = re.compile(rf'^[A-Za-z{PUNCT}]+$')
+
+def is_only_english_or_special(s: str) -> bool:
     """
-    문자열 s가 오직 영어 알파벳 대소문자로만 이루어졌으면 True.
-    공백이나 숫자, 특수문자가 하나라도 있으면 False.
+    문자열 s가 오직 영어 알파벳(A–Z, a–z) 또는
+    ASCII 특수문자(!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)로만 이루어졌으면 True.
+    숫자, 공백, 한글 등 다른 문자가 하나라도 있으면 False.
     """
-    return bool(re.compile(r'^[A-Za-z]+$').fullmatch(s))
+    return bool(_PATTERN.fullmatch(s))
 
 def input_stock():
     while True:
-        stock_name = input("회사명(영어) 또는 티커(영어)를 입력하세요: ")
+        stock_name = input("회사명(영어) 또는 티커를 입력하세요: ")
 
-        if is_only_english_regex(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
-          print("영어만 입력하세요.")
+        if is_only_english_or_special(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
+          print("입력을 다시 확인해 주세요.")
           continue
 
         result = resolve_to_ticker(stock_name)
