@@ -3,6 +3,7 @@ import yfinance as yf
 import re
 import string
 
+#써야 하는 함수: input_stock(), input_stock_data(ticker, status), closing_price(ticker, start_date, end_date)
 def is_valid_ticker(ticker: str) -> bool:
     try:
         info = yf.Ticker(ticker).info
