@@ -98,7 +98,6 @@ def input_stock_data(ticker, status):
           break
       else:
           date, price, shares = input_value
-          date = int(date)
           price = float(price)
           shares = float(shares)
           stock_data.append((status, date, price, shares))
