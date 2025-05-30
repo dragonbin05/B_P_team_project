@@ -1,5 +1,6 @@
 import requests
 import yfinance as yf
+import re
 
 def is_valid_ticker(ticker: str) -> bool:
     try:
@@ -40,7 +41,37 @@ def resolve_to_ticker(query: str) -> tuple[str,str] | None:
     # 2) 회사명 검색
     matches = search_ticker_yahoo(q)
     if matches:
-        return matches[0]  # (symbol, company)
+        return matches[0]  # (ticker, company)
 
     # 3) 못 찾았을 때
     return None
+
+def is_only_english_regex(s: str) -> bool:
+    """
+    문자열 s가 오직 영어 알파벳 대소문자로만 이루어졌으면 True.
+    공백이나 숫자, 특수문자가 하나라도 있으면 False.
+    """
+    return bool(re.compile(r'^[A-Za-z]+$').fullmatch(s))
+
+if __name__ == "__main__":
+    
+    while True:
+        stock_name = input("회사명(영어) 또는 티커(영어)를 입력하세요: ")
+
+        if is_only_english_regex(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
+          print("영어만 입력하세요.")
+          continue
+
+        result = resolve_to_ticker(stock_name)
+        if result == None:
+          print("입력을 다시 확인해 주세요.")
+          continue
+        else:
+          ticker, company_name = result
+          yn = input(f"{ticker}, {company_name}가 맞나요?(Y/N): ").upper()
+          if yn == 'Y':
+              break
+          else:
+              continue
+
+    
