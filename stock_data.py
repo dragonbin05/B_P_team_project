@@ -80,9 +80,9 @@ def input_stock_data(ticker, status):
     #매도 status = 'sell'
     stock_data = []
     if status == 'buy':
-        print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 20250530, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
+        print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
     else:
-        print(f'{ticker}를 매도한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 20250530, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
+        print(f'{ticker}를 매도한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
     while True:
       input_value = input('날짜, 주당 가격, 수량: ').split(',')
       if input_value == ['exit'] or input_value == ['종료']:
@@ -96,17 +96,18 @@ def input_stock_data(ticker, status):
 
     return stock_data
 
-def closing_price(ticker):
-    ticker = yf.Ticker(ticker) #Ticker 객체 생성
+def closing_price(ticker, start_date, end_date):
+    ticker = yf.Ticker(ticker) # 1) Ticker 객체 생성
 
     # 2) 과거 시세 가져오기 (예: 2025-01-01부터 2025-05-30까지)
     hist = ticker.history(
-        start="2025-01-01",   # 조회 시작일 (YYYY-MM-DD)
-        end="2025-05-31",     # 조회 종료일(이 날짜 이후 데이터는 제외됩니다)
+        start=start_date,   # 조회 시작일 (YYYY-MM-DD)
+        end=end_date,     # 조회 종료일(이 날짜 이후 데이터는 제외됩니다)
         interval="1d"         # 일간 단위
     )
 
-    # 3) 'Close' 컬럼을 리스트로 변환
+    # 3) 날짜 리스트와 종가 리스트를 생성
+    date_list = [ts.strftime("%Y-%m-%d") for ts in hist.index]
     close_prices = hist["Close"].tolist()
 
-    return close_prices
+    return date_list, close_prices # (날짜 리스트, 종가 리스트)
