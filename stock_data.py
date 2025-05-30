@@ -76,8 +76,8 @@ def input_stock():
     return ticker
 
 def input_stock_data(ticker, status):
-    #매수이면 status = 'buy'
-    #매도이면 status = 'sell'
+    #매수 status = 'buy'
+    #매도 status = 'sell'
     stock_data = []
     if status == 'buy':
         print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 20250530, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
