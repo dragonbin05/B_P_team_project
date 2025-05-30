@@ -19,7 +19,7 @@ def search_ticker_yahoo(name: str, max_results: int = 5) -> list[tuple[str,str]]
     results = []
     for q in data:
         sym = q.get('symbol')
-        comp = q.get('shortname') or q.get('longname')
+        comp = q.get('longname') or q.get('shortname') 
         if sym and comp:
             results.append((sym, comp))
     return results
@@ -35,7 +35,7 @@ def resolve_to_ticker(query: str) -> tuple[str,str] | None:
     # 1) 이미 티커인지 확인
     if is_valid_ticker(q.upper()):
         info = yf.Ticker(q.upper()).info
-        company = info.get("shortName") or info.get("longName") or "Unknown"
+        company = info.get("longName") or info.get("shortName") or "Unknown"
         return q.upper(), company
 
     # 2) 회사명 검색
@@ -95,3 +95,18 @@ def input_stock_data(ticker, status):
           stock_data.append((status, date, price, shares))
 
     return stock_data
+
+def closing_price(ticker):
+    ticker = yf.Ticker(ticker) #Ticker 객체 생성
+
+    # 2) 과거 시세 가져오기 (예: 2025-01-01부터 2025-05-30까지)
+    hist = ticker.history(
+        start="2025-01-01",   # 조회 시작일 (YYYY-MM-DD)
+        end="2025-05-31",     # 조회 종료일(이 날짜 이후 데이터는 제외됩니다)
+        interval="1d"         # 일간 단위
+    )
+
+    # 3) 'Close' 컬럼을 리스트로 변환
+    close_prices = hist["Close"].tolist()
+
+    return close_prices
