@@ -17,7 +17,7 @@ def find_company_with_LLM(user_input):
     messages=[
         {
         "role": 'system',
-        "content":"I'll give you a typo ticker or company name or etf name. As long as it's most similar to this, make sure to tell me the investment item by 'name'."
+        "content":"You are an assistant that receives a possibly mistyped ticker symbol, company name, or ETF name. Your job is to identify the single most similar valid investment item and output **exactly** its official “name” (not the ticker), with **no** additional words, explanations, or punctuation—just the name itself."
         },
         {
         "role": "user",
@@ -71,18 +71,15 @@ def resolve_to_ticker(query: str) -> tuple[str,str] | None:
     # 3) 못 찾았을 때
     return (None, q)
 
-# 재사용 가능한 특수문자 패턴
-PUNCT = re.escape(string.punctuation)  
-
-# 영어 알파벳 (A–Z, a–z) 혹은 특수문자만 허용
-_PATTERN = re.compile(rf'^[A-Za-z{PUNCT}]+$')
-
 def is_only_english_or_special(s: str) -> bool:
     """
-    문자열 s가 오직 영어 알파벳(A–Z, a–z) 또는
-    ASCII 특수문자(!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)로만 이루어졌으면 True.
-    숫자, 공백, 한글 등 다른 문자가 하나라도 있으면 False.
+    문자열 s가 오직 영어 알파벳(A–Z, a–z),
+    ASCII 특수문자(!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~) 그리고 공백(스페이스)로만 이루어졌으면 True.
+    숫자, 한글 등 다른 문자가 하나라도 있으면 False.
     """
+    PUNCT = re.escape(string.punctuation)  # 특수문자 패턴
+    _PATTERN = re.compile(rf'^[A-Za-z{PUNCT} ]+$') # 영어 알파벳 (A–Z, a–z) 혹은 특수문자만 허용
+    
     return bool(_PATTERN.fullmatch(s))
 
 def input_stock():
