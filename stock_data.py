@@ -75,4 +75,22 @@ def input_stock():
           
     return ticker
 
-    
+def input_stock_data(ticker, status):
+    #매수 상태를 0, 매도 상태를 1로 표시
+    buy_stock_data = []
+    if status == 0:
+        print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 20250530, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
+    else:
+        print(f'{ticker}를 매도한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 20250530, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
+    while True:
+      input_value = input('날짜, 주당 가격, 수량: ').split(',')
+      if input_value == ['exit'] or input_value == ['종료']:
+          break
+      else:
+          date, price, shares = input_value
+          date = int(date)
+          price = float(price)
+          shares = float(shares)
+          buy_stock_data.append((status, date, price, shares))
+
+    return buy_stock_data
