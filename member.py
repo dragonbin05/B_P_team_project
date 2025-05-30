@@ -1,6 +1,6 @@
 import re
-import csv
-import os
+from pathlib import Path
+import json
 
 # 특수문자 존재하면 True 반환
 def contains_special_char(s): 
@@ -8,11 +8,20 @@ def contains_special_char(s):
 
 def signup():
     while True:
+        json_file = Path('user_data.json')
+
+        if json_file.exists() and json_file.stat().st_size > 0:
+            with json_file.open('r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            data = {}
+            with json_file.open('w+t') as fp:
+                json.dump(data, fp)
+
         id = input("ID를 입력하시오: ")
     
-        with open("user_Data.csv", newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            usernames = [row["username"] for row in reader]
+        with json_file.open('rt') as fp:
+            usernames = json.load(fp).keys()
 
         if id in usernames:
             print("이미 존재하는 아이디입니다. 다른 아이디를 사용해주세요")
@@ -27,16 +36,21 @@ def signup():
                 if contains_special_char(pw) == True:
                     break
 
-            # 파일이 없으면 헤더 추가, 있으면 헤더 없이 이어서 저장
-            file_exists = os.path.isfile("user_data.csv")
+            data[id] = pw
 
-            with open("user_data.csv", mode="a", newline="", encoding="utf-8") as file:
-                writer = csv.writer(file)
+            with json_file.open('w+t') as fp:
+                json.dump(data, fp)
 
-                if not file_exists:
-                    writer.writerow(["username", "password"])  # 헤더 작성
+            # # 파일이 없으면 헤더 추가, 있으면 헤더 없이 이어서 저장
+            # file_exists = os.path.isfile("user_data.csv")
 
-                writer.writerow([id, pw])  # 사용자 정보 저장
+            # with open("user_data.csv", mode="a", newline="", encoding="utf-8") as file:
+            #     writer = csv.writer(file)
+
+            #     if not file_exists:
+            #         writer.writerow(["username", "password"])  # 헤더 작성
+
+            #     writer.writerow([id, pw])  # 사용자 정보 저장
 
             print("회원가입이 완료되었습니다.")
             break
