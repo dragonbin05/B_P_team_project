@@ -8,7 +8,7 @@ json_file = Path('user_data.json')
 with json_file.open('rt') as fp:
     usernames = json.load(fp).keys() #id.json 파일의 키값만 모은 리스트
 
-def create_csv():
+def csv_create():
     '''
     userdata.json에서 id를 불러와서 'id.csv' 파일을 생성성
     '''
