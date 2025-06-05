@@ -136,6 +136,6 @@ def closing_price(ticker, start_date, end_date):
 
     # 3) 날짜 리스트와 종가 리스트를 생성
     date_list = [ts.strftime("%Y-%m-%d") for ts in hist.index]
-    close_prices = hist["Close"].tolist()
+    close_prices = [float(p) for p in hist["Close"].tolist()]
 
     return date_list, close_prices # (날짜 리스트, 종가 리스트)
