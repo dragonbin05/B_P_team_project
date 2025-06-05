@@ -18,10 +18,16 @@ def signup():
             with json_file.open('w+t') as fp:
                 json.dump(data, fp)
 
-        id = input("ID를 입력하시오: ")
+        first = print("로그인하려면 Y, 회원가입하려면 N을 입력하세요요").lower()
+
+        if first == "y": #로그인
+            signin()
+            break
+        elif first == "n": #회원가입
+            id = input("회원가입할 ID를 입력하시오: ")
     
         with json_file.open('rt') as fp:
-            usernames = json.load(fp).keys()
+            usernames = json.load(fp).keys() #id json 파일
 
         if id in usernames:
             print("이미 존재하는 아이디입니다. 다른 아이디를 사용해주세요")
@@ -52,5 +58,28 @@ def signup():
 
             #     writer.writerow([id, pw])  # 사용자 정보 저장
 
-            print("회원가입이 완료되었습니다.")
+            print("회원가입이 완료되었습니다!")
             break
+
+def signin():
+    while True:
+        id_signin = input("로그인할 아이디를 입력해주세요: ")
+        if id_signin in json_file.keys():
+            pw_signin = input("비밀번호를 입력해주세요: ")
+            ### 6/6 여기부터 시작!!!!!!!!!!!!!!!!!!!!!!!!!!
+        else:
+            input("존재하지 않는 아이디입니다. 다시 입력해주세요")
+            
+
+        json_file = Path('user_data.json')
+
+        with json_file.open('rt') as fp:
+                usernames = json.load(fp).keys() #id json 파일
+
+        if json_file.exists() and json_file.stat().st_size > 0:
+            with json_file.open('r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            data = {}
+            with json_file.open('w+t') as fp:
+                json.dump(data, fp)
