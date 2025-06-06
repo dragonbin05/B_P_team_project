@@ -82,15 +82,16 @@ def portfolio(id):
             print("포트폴리오 입력을 종료합니다.")
             break
 
-        if stock_data.resolve_to_ticker(ticker[0]) == "None":
-            ticker = input("티커가 잘못되었습니다. 다시 입력해주세요: ")
-            if ticker == 'exit' or ticker == 'EXIT' or ticker == '종료':
-                print("포트폴리오 입력을 종료합니다.")
-                break
+        if stock_data.resolve_to_ticker(ticker)[0] == None:
+            print("티커가 잘못되었습니다. 다시 입력해주세요")
+            continue
+            # if ticker == 'exit' or ticker == 'EXIT' or ticker == '종료':
+            #     print("포트폴리오 입력을 종료합니다.")
+            #     break
         else:
             ratio = input(f"{ticker}의 비율을 입력해주세요: ")
             portfoliocsv_create(id)
-            k = (ticker, ratio)
+            k = (ticker.upper(), ratio)
             portfoliocsv_update(id, k)
 
         continue
