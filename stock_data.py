@@ -136,8 +136,10 @@ def input_stock():
     while True:
         stock_name = input("종목명(영어) 또는 티커를 입력하세요: ")
 
-        if stock_name.lower() == 'exit' or stock_name == '종료':
-            return None
+        if stock_name.lower() == 'exit':
+            return stock_name.lower()
+        elif stock_name == '종료':
+            return stock_name
 
         if is_only_english_or_special(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
           print("입력을 다시 확인해 주세요.")
