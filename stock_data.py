@@ -136,14 +136,15 @@ def input_stock():
     while True:
         stock_name = input("종목명(영어) 또는 티커를 입력하세요: ")
 
+        if stock_name.lower() == 'exit' or stock_name == '종료':
+            break
+
         if is_only_english_or_special(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
           print("입력을 다시 확인해 주세요.")
           continue
 
         result = resolve_to_ticker(stock_name)
-        if stock_name == 'exit' or stock_name == 'EXIT' or stock_name == '종료':
-            break
-        elif result[0] == None:
+        if result[0] == None:
           print(f"입력을 다시 확인해 주세요. 혹시 {find_company_with_LLM(result[1])}을(를) 찾나요?")
           continue
         else:
