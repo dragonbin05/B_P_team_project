@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 import json
+import member
 
 # 특수문자 존재하면 True 반환!
 def contains_special_char(s): 
@@ -63,13 +64,12 @@ def signup():
             #     writer.writerow([id, pw])  # 사용자 정보 저장
 
             print("회원가입이 완료되었습니다!")
+            member.id_signin = id
             break
 
 id_signin = ''
 
 def signin():
-    global id_signin
-
     exit_all = False
 
     json_file = Path('user_data.json')
@@ -107,4 +107,3 @@ def signin():
             print("존재하지 않는 아이디입니다. 다시 입력해주세요")
             continue
         
-    

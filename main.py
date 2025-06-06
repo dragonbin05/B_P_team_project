@@ -1,4 +1,4 @@
-# main.py
+import os
 import member
 import id_stock_data
 import stock_data
@@ -74,10 +74,43 @@ def main():
                 sub = input("선택 >> ")
 
                 if sub == "a":
+                    # ‘port_{user_id}.csv’ 에 설정된 포트폴리오 데이터가 있는지 확인
+                    port_path = f"port_{user_id}.csv"
+                    # 파일이 없거나, 헤더만 있고 실제 데이터가 없으면 스킵
+                    if not os.path.isfile(port_path):
+                        print("포트폴리오 파일이 존재하지 않습니다. 먼저 포트폴리오를 설정하세요.")
+                        continue
+                    df_port = pd.read_csv(port_path)
+                    # 헤더만 있고 실제 데이터(티커·ratio) 컬럼이 비어 있으면 스킵
+                    if df_port.shape[0] == 0 or "ticker" not in df_port.columns or df_port["ticker"].isnull().all():
+                        print("저장된 포트폴리오 데이터가 없습니다. 먼저 포트폴리오를 설정하세요.")
+                        continue
+
+                    # 실제 데이터가 있으면 시각화 함수 호출
                     visualize.visualize_seted_portfolio(user_id)
+
                 elif sub == "b":
                     visualize.visualize_principal_portfolio(user_id)
+
                 elif sub == "c":
+                    # 보유 종목이 있는지 먼저 확인
+                    # get_principal_and_position을 통해
+                    # date별 position을 계산해 보유 여부 판단
+                    all_tickers = pd.read_csv(f"{user_id}.csv")["ticker"].unique()
+                    having_any = False
+
+                    for tk in all_tickers:
+                        df_t = visualize.get_principal_and_position(user_id, tk)
+                        # 맨 마지막 position(=0이 아니면 보유 중)
+                        if not df_t.empty and df_t["position"].iloc[-1] > 0:
+                            having_any = True
+                            break
+
+                    if not having_any:
+                        print("현재 한 주도 보유하지 않고 있습니다. 시각화할 수 없습니다.")
+                        continue
+
+                    # 보유 종목이 하나 이상 있으면 티커 선택으로 넘어감
                     sel = visualize.input_visualize_ticker(user_id)
                     df_port = visualize.get_selected_portfolio(user_id, sel)
                     visualize.visualize_stock(df_port)
