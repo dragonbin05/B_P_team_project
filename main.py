@@ -8,6 +8,8 @@ def main():
     id_stock_data.csv_create()
     for i in stock_data.input_stock_data('AAPL', 'buy'):
         id_stock_data.csv_update(i)
+    id = member.id_signin
+    id_stock_data.portfolio(id)
 
 if __name__ == '__main__':
     main()
