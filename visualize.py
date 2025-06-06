@@ -4,6 +4,21 @@ import stock_data as sd
 from functools import reduce
 
 def get_principal_and_position(user_id, ticker):
+    """
+    주어진 사용자(user_id)와 특정 종목(ticker)에 대해 거래 이력을 읽어들여
+    "cash_flow", "principal", "delta_shares", "position", "close", "valuation"을 계산합니다.
+    1. "cash_flow": 매수일 때 +price*shares, 매도일 때 -price*shares
+    2. "principal": cash_flow의 누적합 → 순 투자 원금
+    3. "delta_shares": 매수일 때 +shares, 매도일 때 -shares
+    4. "position": delta_shares의 누적합 → 보유 주식 수
+    5. 동일 날짜의 여러 거래가 있을 경우, 날짜별 마지막 값을 사용
+    6. 첫 거래일부터 오늘까지 날짜를 채우고(frequency='D'), 결측치는 직전 날짜 값으로 채움
+    7. 종가(close) 데이터를 가져와 병합 후 결측치는 직전 값으로 채움
+    8. "valuation": position * close → 평가 금액
+
+    반환:
+        DataFrame(columns=["date", "principal", "position", "close", "valuation"])  날짜별
+    """
     stock_data = pd.read_csv(f"{user_id}.csv", parse_dates=["date"])
     stock_data = stock_data[stock_data['ticker'] == ticker] #티커에 맞는 행만 남기기
 
@@ -56,6 +71,15 @@ def get_principal_and_position(user_id, ticker):
     return stock_data
 
 def input_visualize_ticker(user_id):
+    """
+    사용자(user_id)의 거래 기록에서 보유 중인 티커 목록을 출력하고,
+    시각화할 티커를 입력받아 반환합니다.
+    • "전체" 또는 "all" 입력 시 모든 티커 반환
+    • 쉼표(',')로 구분하여 여러 티커 입력 가능 (공백 무시, 대소문자 구분 없음)
+
+    반환:
+        selected_ticker (list of str) - 선택된 티커 리스트
+    """
     ticker_col = pd.read_csv(f"{user_id}.csv")["ticker"]
     tickers = list(ticker_col.unique())
     while True:
@@ -82,16 +106,16 @@ def input_visualize_ticker(user_id):
 
 def get_selected_portfolio(user_id, selected_ticker) -> pd.DataFrame:
     """
-    한 사람(user_id)이 보유한 여러 종목(tickers)의 DataFrame을 합쳐,
-    날짜별로 '총 누적 원금(total_principal)'과 '총 평가금액(total_valuation)'을 계산해 반환합니다.
+    선택된 티커 리스트(selected_ticker)에 대해 각 티커별로
+    get_principal_and_position 함수를 호출하여 반환된 DataFrame들을
+    날짜별(date 인덱스)로 합쳐(total outer join),
+    "total_principal"과 "total_valuation" 컬럼을 계산하여 반환합니다.
 
     반환 컬럼:
-        date             (datetime64[ns])
-        total_principal  (float)  → 여러 티커의 principal 합계
-        total_valuation  (float)  → 여러 티커의 valuation 합계
+        date               (datetime64[ns])
+        total_principal    (float) - 모든 티커 원금 합계
+        total_valuation    (float) - 모든 티커 평가금액 합계
     """
-
-
     per_ticker_dfs = []
 
     for ticker in selected_ticker:
@@ -141,6 +165,12 @@ def get_selected_portfolio(user_id, selected_ticker) -> pd.DataFrame:
     return result
 
 def visualize_stock(edited_stock_data):
+    """
+    날짜별로 "원금(total_principal)"과 "평가금액(total_valuation)"을 꺾은선 그래프로 표시합니다.
+
+    매개변수:
+        edited_stock_data (DataFrame) - get_selected_portfolio 반환 DataFrame
+    """
     plt.rc("font", family="Malgun Gothic") #한글 깨짐 방지
 
     fig, ax = plt.subplots()
@@ -155,6 +185,17 @@ def visualize_stock(edited_stock_data):
     plt.show()
 
 def visualize_seted_portfolio(user_id):
+    """
+    "port_{user_id}.csv" 파일에 저장된 사용자 포트폴리오 비율을 파이 차트로 시각화합니다.
+
+    예시 CSV 포맷:
+        ticker,ratio
+        AAPL,30
+        TSLA,20
+        MSFT,50
+
+    반환: 없음 (그래프를 출력)
+    """
     port_data = pd.read_csv(f"port_{user_id}.csv")
 
     # “ticker” 컬럼을 인덱스로, “ratio” 컬럼을 파이 차트값으로 사용
