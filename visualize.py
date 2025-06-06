@@ -154,10 +154,28 @@ def visualize_stock(edited_stock_data):
     plt.tight_layout()
     plt.show()
 
-# def visualize_seted_portfolio(user_id):
-#     port_data = pd.read_csv(f"port_{user_id}.csv")
-#     fig, ax = plt.subplots()
-#     port_data.plot.pie()
+def visualize_seted_portfolio(user_id):
+    port_data = pd.read_csv(f"port_{user_id}.csv")
+
+    # “ticker” 컬럼을 인덱스로, “ratio” 컬럼을 파이 차트값으로 사용
+    port_data = port_data.set_index("ticker")
+    ratio = port_data["ratio"]
+
+    # 파이 차트 그리기
+    plt.rc("font", family="Malgun Gothic")  # 한글 깨짐 방지
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.pie(
+        ratio,
+        labels=ratio.index,
+        autopct="%1.1f%%",
+        startangle=90,
+        textprops={"fontsize": 10}
+    )
+    ax.set_title("설정 포트폴리오 비율", fontsize=14)
+    ax.axis("equal")  # 원형 파이로 그리기
+
+    plt.tight_layout()
+    plt.show()
 
 def visualize_principal_portfolio(user_id):
     """
@@ -203,4 +221,8 @@ def visualize_principal_portfolio(user_id):
     plt.tight_layout()
     plt.show()
 
-visualize_principal_portfolio('test')
+# visualize_principal_portfolio('test')
+
+# p = input_visualize_ticker('test')
+# q = get_selected_portfolio('test', p)
+# visualize_stock(q)
