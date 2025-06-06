@@ -35,6 +35,7 @@ def csv_update(stockdata): #인자: 사용자 주식 정보 튜플
     for j in usernames:
         with open(f"{j}.csv", mode="a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
+            writer.writerow(stockdata)
             
     for j in usernames: # 주식 데이터를 날짜순으로 정렬
         df = pd.read_csv(f"{j}.csv", parse_dates=["date"])
