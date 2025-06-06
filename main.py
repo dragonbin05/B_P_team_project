@@ -12,8 +12,6 @@ def main():
     # ───────────────────────────── 
     user_id = member.signup()         # 로그인된 사용자 ID
 
-    print(user_id)
-
     # CSV 및 포트폴리오 파일 준비
     id_stock_data.csv_create()                # <user>.csv
     id_stock_data.portfoliocsv_create(user_id)  # port_<user>.csv
