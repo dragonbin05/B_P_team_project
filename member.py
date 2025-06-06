@@ -26,7 +26,10 @@ def signup():
             break
         elif first == "n": #회원가입
             id = input("회원가입할 ID를 입력하시오: ")
-    
+        else:
+            print("잘못 입력했습니다. 다시 입력해주세요")
+            continue
+
         with json_file.open('rt') as fp:
             usernames = json.load(fp).keys() #id:pw json 파일
 
