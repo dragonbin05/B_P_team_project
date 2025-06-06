@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import stock_data as sd
+import stock_data
 from functools import reduce
 
 def get_principal_and_position(user_id: str, ticker: str):
@@ -9,8 +9,6 @@ def get_principal_and_position(user_id: str, ticker: str):
                 ⇒ 포지션 0이면 principal 0
     반환 컬럼: date, principal, position, close, valuation
     """
-    import pandas as pd
-    import stock_data  # closing_price 함수가 여기 있다고 가정
 
     # 1) 해당 티커 거래 내역 읽기 (날짜 오름차순)
     df = (
@@ -19,6 +17,17 @@ def get_principal_and_position(user_id: str, ticker: str):
           .sort_values("date")
           .reset_index(drop=True)
     )
+    
+    df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce")
+
+    df = df.dropna(subset=["date"])
+    #    만약 여기서 df가 비어버린다면, 더 이상 처리할 데이터가 없습니다.
+    #    이 경우 빈 DataFrame을 반환하거나, 적절히 예외 처리하면 좋습니다.
+    if df.empty:
+        # 아무 거래 기록이 없으면 빈 결과 리턴
+        return pd.DataFrame(
+            columns=["date", "principal", "position", "close", "valuation"]
+        )
 
     principal = 0.0        # 누적 원가
     position  = 0.0        # 누적 보유 수
