@@ -36,11 +36,15 @@ def csv_update(stockdata): #인자: 사용자 주식 정보 튜플
         with open(f"{j}.csv", mode="a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerow(stockdata)
-            
-    for j in usernames: # 주식 데이터를 날짜순으로 정렬
-        df = pd.read_csv(f"{j}.csv", parse_dates=["date"])
+
+def sort_all_user_files_by_date(): # 주식 데이터를 날짜순으로 정렬
+    json_file = Path('user_data.json')
+    with json_file.open('rt') as fp:
+        usernames = json.load(fp).keys()
+    for user in usernames:
+        df = pd.read_csv(f"{user}.csv", parse_dates=["date"])
         df.sort_values("date", inplace=True)
-        df.to_csv(f"{j}.csv", index=False)    
+        df.to_csv(f"{user}.csv", index=False)
 
 def portfoliocsv_create(id):
     '''

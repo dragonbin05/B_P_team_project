@@ -11,5 +11,7 @@ def main():
     id = member.id_signin
     id_stock_data.portfolio(id)
 
+    id_stock_data.sort_all_user_files_by_date()
+
 if __name__ == '__main__':
     main()
