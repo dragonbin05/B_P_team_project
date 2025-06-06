@@ -140,7 +140,7 @@ def get_selected_portfolio(user_id, selected_ticker) -> pd.DataFrame:
 
     return result
 
-def visualize(edited_stock_data):
+def visualize_stock(edited_stock_data):
     plt.rc("font", family="Malgun Gothic") #한글 깨짐 방지
 
     fig, ax = plt.subplots()
@@ -153,3 +153,54 @@ def visualize(edited_stock_data):
 
     plt.tight_layout()
     plt.show()
+
+# def visualize_seted_portfolio(user_id):
+#     port_data = pd.read_csv(f"port_{user_id}.csv")
+#     fig, ax = plt.subplots()
+#     port_data.plot.pie()
+
+def visualize_principal_portfolio(user_id):
+    """
+    user_id.csv에 기록된 거래 내역을 통해, 현재 보유 중인(포지션>0) 종목들의
+    '지금까지 순투자된 원금(net principal)'을 구해서 파이 차트로 시각화합니다.
+    """
+    # CSV에서 중복 없는 ticker 리스트 추출
+    df_all = pd.read_csv(f"{user_id}.csv", parse_dates=["date"])
+    tickers = list(df_all["ticker"].unique())
+
+    # 각 티커별로 가장 최근 principal 값만 뽑아서 딕셔너리에 저장
+    principal_for_pie = {}
+    for ticker in tickers:
+        df_t = get_principal_and_position(user_id, ticker)
+
+        # position 컬럼을 마지막으로 확인하여 “오늘 보유 수량 > 0”인 종목만 대상
+        last_row = df_t.iloc[-1]
+        if last_row["position"] > 0:
+            principal_for_pie[ticker] = last_row["principal"]
+        # position == 0 이면 이미 전부 팔았거나 보유 수량이 없으므로 제외
+
+    # 보유 중인 종목이 하나도 없는 경우 예외 처리
+    if not principal_for_pie:
+        print("현재 보유 중인 종목이 없습니다.")
+        return
+
+    # 파이 차트에 사용할 라벨과 사이즈 준비
+    labels = list(principal_for_pie.keys())
+    sizes  = list(principal_for_pie.values())
+
+    # 파이 차트 그리기
+    plt.rc("font", family="Malgun Gothic")  #한글 깨짐 방지
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.pie(
+        sizes,
+        labels=labels,
+        autopct="%1.1f%%",
+        startangle=90,
+        textprops={"fontsize": 10}
+    )
+    ax.set_title("현재 보유 종목별 순투자 원금 비중", fontsize=12)
+    ax.axis("equal")  # 파이를 원형으로 그리기 위해
+    plt.tight_layout()
+    plt.show()
+
+visualize_principal_portfolio('test')
