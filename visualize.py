@@ -94,13 +94,18 @@ def input_visualize_ticker(user_id):
             selected_ticker = tickers
             break
         else:
+            tf = True
             selected_ticker = [item.strip().upper() for item in selected_ticker.split(",")]
             for i in selected_ticker:
                 if i in tickers:
                     pass
                 else:
                     print(f"{i}은(는) 보유하고 있지 않습니다. 다시 입력하세요.")
-                    continue
+                    tf = False
+                    break
+        if tf == False:
+            continue
+        else:
             break
 
     return selected_ticker
@@ -122,6 +127,10 @@ def get_selected_portfolio(user_id, selected_ticker) -> pd.DataFrame:
     for ticker in selected_ticker:
         #티커별로 DataFrame 얻기
         df = get_principal_and_position(user_id, ticker)
+
+        if df.empty:          # 데이터 없으면 스킵
+            print(f"[경고] {ticker} 거래 내역이 없습니다 → 제외")
+        continue
 
         #'date'를 인덱스로, 'principal'과 'valuation'만 추출
         df = df.set_index("date")[["principal", "valuation"]]
