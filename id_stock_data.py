@@ -89,7 +89,7 @@ def portfolio(id):
             #     print("포트폴리오 입력을 종료합니다.")
             #     break
         else:
-            ratio = input(f"{ticker}의 비율을 입력해주세요: ")
+            ratio = input(f"{ticker.upper()}의 비율을 입력해주세요: ")
             portfoliocsv_create(id)
             k = (ticker.upper(), ratio)
             portfoliocsv_update(id, k)
