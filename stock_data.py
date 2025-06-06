@@ -9,9 +9,16 @@ client = OpenAI(
   api_key="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",
 )
 
-#써야 하는 함수: input_stock(), input_stock_data(ticker, status), closing_price(ticker, start_date, end_date)
-
 def find_company_with_LLM(user_input):
+    """
+    주어진 user_input(회사 이름이나 잘못된 티커 등)에 대해 LLM을 사용하여
+    가장 유사한 공식 회사 이름을 찾아 반환합니다.
+
+    매개변수:
+        user_input (str): 사용자가 입력한 잘못된 티커나 회사명.
+    반환:
+        company_name (str): LLM이 추천하는 정확한 회사명.
+    """
     completion = client.chat.completions.create(
     model="meta-llama/llama-3.3-8b-instruct:free",
     messages=[
@@ -27,7 +34,16 @@ def find_company_with_LLM(user_input):
     )
     return completion.choices[0].message.content
 
-def is_valid_ticker(ticker: str) -> bool:
+def is_valid_ticker(ticker: str):
+    """
+    주어진 티커(symbol)가 유효한지 확인합니다.
+    yfinance 라이브러리를 사용하여 정보가 존재하는지 검사합니다.
+
+    매개변수:
+        ticker (str): 확인할 티커 문자열.
+    반환:
+        bool: 유효한 티커이면 True, 아니면 False.
+    """
     try:
         info = yf.Ticker(ticker).info
         return bool(info.get("shortName") or info.get("regularMarketPrice"))
@@ -35,6 +51,16 @@ def is_valid_ticker(ticker: str) -> bool:
         return False
 
 def search_ticker_yahoo(name: str, max_results: int = 5) -> list[tuple[str,str]]:
+    """
+    Yahoo Finance 검색 API를 사용하여 입력한 이름(name)에 대해 최대 max_results 만큼
+    티커(symbol)와 회사명(longname or shortname)을 반환합니다.
+
+    매개변수:
+        name (str): 검색할 회사명 또는 키워드.
+        max_results (int): 반환할 최대 결과 개수 (기본값 5).
+    반환:
+        results (list of tuple): [(symbol, company_name), ...]
+    """
     url = 'https://query1.finance.yahoo.com/v1/finance/search'
     params = {'q': name, 'quotesCount': max_results, 'newsCount': 0}
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -49,11 +75,21 @@ def search_ticker_yahoo(name: str, max_results: int = 5) -> list[tuple[str,str]]
             results.append((sym, comp))
     return results
 
-def resolve_to_ticker(query: str) -> tuple[str,str] | None:
+def resolve_to_ticker(query: str):
     """
-    - 유효한 티커라면 (ticker, company_name) 반환
-    - 회사명 키워드 검색 결과가 있으면 첫 번째 (ticker, company_name) 반환
-    - 둘 다 아니면 (None, query.strip()) 반환
+    사용자가 입력한 query가 티커(symbol)인지, 회사명 키워드인지 판별하고,
+    적절한 (ticker, company_name)을 반환합니다.
+
+    1) 입력이 유효한 티커라면 해당 티커와 회사명을 반환
+    2) 아니면 Yahoo Finance 검색 결과의 첫 번째 매칭을 반환
+    3) 여전히 찾지 못하면 (None, 입력값) 반환
+
+    매개변수:
+        query (str): 사용자가 입력한 문자열 (티커 또는 회사명 키워드).
+    반환:
+        - 유효한 티커라면 (ticker, company_name)
+        - 회사명 키워드 검색 결과가 있으면 (ticker, company_name)
+        - 둘 다 아니면 (None, query.strip())
     """
     q = query.strip()
 
@@ -83,6 +119,16 @@ def is_only_english_or_special(s: str) -> bool:
     return bool(_PATTERN.fullmatch(s))
 
 def input_stock():
+    """
+    사용자가 티커 또는 회사명을 입력하도록 요청하고, 올바른 티커로 변환되면 반환합니다.
+    1) 사용자가 입력한 문자열이 영어 및 특수문자로만 이루어졌는지 확인
+    2) resolve_to_ticker 함수를 통해 유효한 티커인지 판별
+    3) 유효 시 "Y/N" 확인 후 최종 티커 반환
+    4) 잘못된 입력 시 재입력 요청
+
+    반환:
+        ticker (str): 최종 확정된 유효 티커 (대문자).
+    """
     while True:
         stock_name = input("종목명(영어) 또는 티커를 입력하세요: ")
 
@@ -105,8 +151,18 @@ def input_stock():
     return ticker
 
 def input_stock_data(ticker, status):
-    #매수 status = 'buy'
-    #매도 status = 'sell'
+    """
+    사용자가 입력한 매수/매도 데이터를 수집하여 리스트로 반환합니다.
+    1) status가 'buy'이면 매수, 'sell'이면 매도로 간주.
+    2) "exit" 또는 "종료" 입력 시 반복 종료.
+    3) 입력 예시: "2025-05-30, 210, 2" -> (ticker, status, date, price, shares)
+
+    매개변수:
+        ticker (str): 대상 티커.
+        status (str): 'buy' 또는 'sell'.
+    반환:
+        stock_data (list of tuples): [(ticker, status, date, price, shares), ...]
+    """
     stock_data = []
     if status == 'buy':
         print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요. (ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
@@ -125,6 +181,18 @@ def input_stock_data(ticker, status):
     return stock_data
 
 def closing_price(ticker, start_date, end_date):
+    """
+    yfinance를 사용하여 지정한 기간(start_date ~ end_date)의 일간 종가 데이터를 반환합니다.
+
+    매개변수:
+        ticker (str): 조회할 티커.
+        start_date (str): 시작 날짜 (YYYY-MM-DD).
+        end_date (str): 종료 날짜 (YYYY-MM-DD).
+    반환:
+        (date_list, close_prices):
+            date_list (list of str): 날짜 문자열 목록 ("YYYY-MM-DD").
+            close_prices (list of float): 해당 날짜의 종가 리스트.
+    """
     ticker = yf.Ticker(ticker) # 1) Ticker 객체 생성
 
     # 2) 과거 시세 가져오기 (예: 2025-01-01부터 2025-05-30까지)
