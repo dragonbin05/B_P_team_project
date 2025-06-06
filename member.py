@@ -6,6 +6,8 @@ import json
 def contains_special_char(s): 
     return bool(re.search(r'[^a-zA-Z0-9\s]', s)) # 특수문자를 의미하는 정규표현식: 알파벳, 숫자, 공백을 제외한 문자
 
+data = {}
+
 def signup():
     while True:
         json_file = Path('user_data.json')
@@ -14,11 +16,10 @@ def signup():
             with json_file.open('r', encoding='utf-8') as f:
                 data = json.load(f)
         else:
-            data = {}
             with json_file.open('w+t') as fp:
                 json.dump(data, fp)
 
-        first = print("로그인하려면 Y, 회원가입하려면 N을 입력하세요요").lower()
+        first = input("로그인하려면 Y, 회원가입하려면 N을 입력하세요: ").lower()
 
         if first == "y": #로그인
             signin()
@@ -27,7 +28,7 @@ def signup():
             id = input("회원가입할 ID를 입력하시오: ")
     
         with json_file.open('rt') as fp:
-            usernames = json.load(fp).keys() #id json 파일
+            usernames = json.load(fp).keys() #id:pw json 파일
 
         if id in usernames:
             print("이미 존재하는 아이디입니다. 다른 아이디를 사용해주세요")
@@ -61,21 +62,16 @@ def signup():
             print("회원가입이 완료되었습니다!")
             break
 
+exit_all = False
+
 def signin():
+    json_file = Path('user_data.json')
+
+    with json_file.open('rt') as fp:
+        usernames = json.load(fp).keys() #id json 파일
+
     while True:
-        id_signin = input("로그인할 아이디를 입력해주세요: ")
-        if id_signin in json_file.keys():
-            pw_signin = input("비밀번호를 입력해주세요: ")
-            ### 6/6 여기부터 시작!!!!!!!!!!!!!!!!!!!!!!!!!!
-        else:
-            input("존재하지 않는 아이디입니다. 다시 입력해주세요")
-            
-
-        json_file = Path('user_data.json')
-
-        with json_file.open('rt') as fp:
-                usernames = json.load(fp).keys() #id json 파일
-
+        #json 파일이 존재하면 열기, 존재하지 않으면 json 파일 생성
         if json_file.exists() and json_file.stat().st_size > 0:
             with json_file.open('r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -83,3 +79,23 @@ def signin():
             data = {}
             with json_file.open('w+t') as fp:
                 json.dump(data, fp)
+
+        id_signin = input("로그인할 아이디를 입력해주세요: ")
+        if id_signin in usernames:
+            pw_signin = input("비밀번호를 입력해주세요: ")
+            while True:
+                if pw_signin == data[id_signin]:
+                    print("로그인되었습니다!")
+                    exit_all = True
+                    break
+                else:
+                    pw_signin = input("비밀번호가 틀렸습니다. 다시 입력해주세요: ")
+                    continue
+                    # while True:
+                    #     if pw_signin == data[id_signin]:
+                    #         print("로그인되었습니다!")
+        if exit_all:
+            break
+        else:
+            input("존재하지 않는 아이디입니다. 다시 입력해주세요: ")
+            
