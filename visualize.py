@@ -130,7 +130,7 @@ def get_selected_portfolio(user_id, selected_ticker) -> pd.DataFrame:
 
         if df.empty:          # 데이터 없으면 스킵
             print(f"[경고] {ticker} 거래 내역이 없습니다 → 제외")
-        continue
+            continue
 
         #'date'를 인덱스로, 'principal'과 'valuation'만 추출
         df = df.set_index("date")[["principal", "valuation"]]
