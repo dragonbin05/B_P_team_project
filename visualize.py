@@ -3,72 +3,73 @@ import matplotlib.pyplot as plt
 import stock_data as sd
 from functools import reduce
 
-def get_principal_and_position(user_id, ticker):
+def get_principal_and_position(user_id: str, ticker: str):
     """
-    주어진 사용자(user_id)와 특정 종목(ticker)에 대해 거래 이력을 읽어들여
-    "cash_flow", "principal", "delta_shares", "position", "close", "valuation"을 계산합니다.
-    1. "cash_flow": 매수일 때 +price*shares, 매도일 때 -price*shares
-    2. "principal": cash_flow의 누적합 → 순 투자 원금
-    3. "delta_shares": 매수일 때 +shares, 매도일 때 -shares
-    4. "position": delta_shares의 누적합 → 보유 주식 수
-    5. 동일 날짜의 여러 거래가 있을 경우, 날짜별 마지막 값을 사용
-    6. 첫 거래일부터 오늘까지 날짜를 채우고(frequency='D'), 결측치는 직전 날짜 값으로 채움
-    7. 종가(close) 데이터를 가져와 병합 후 결측치는 직전 값으로 채움
-    8. "valuation": position * close → 평가 금액
-
-    반환:
-        DataFrame(columns=["date", "principal", "position", "close", "valuation"])  날짜별
+    principal = 현재 포지션의 순 원가만 반영 (차익·손실 제외)
+                ⇒ 포지션 0이면 principal 0
+    반환 컬럼: date, principal, position, close, valuation
     """
-    stock_data = pd.read_csv(f"{user_id}.csv", parse_dates=["date"])
-    stock_data = stock_data[stock_data['ticker'] == ticker] #티커에 맞는 행만 남기기
+    import pandas as pd
+    import stock_data  # closing_price 함수가 여기 있다고 가정
 
-    #전 거래일 기준 원금 편차 구하기
-    stock_data["cash_flow"] = stock_data.apply(
-        lambda r:  r["price"] * r["shares"] if r["status"] == "buy"
-                else -r["price"] * r["shares"],
-        axis=1
+    # 1) 해당 티커 거래 내역 읽기 (날짜 오름차순)
+    df = (
+        pd.read_csv(f"{user_id}.csv", parse_dates=["date"])
+          .query("ticker == @ticker")
+          .sort_values("date")
+          .reset_index(drop=True)
     )
-    stock_data["principal"] = stock_data["cash_flow"].cumsum() #누적합을 'principal'컬럼에 저장
 
-    #position(보유 주식 수) 계산: 매수면 +shares, 매도면 –shares
-    stock_data["delta_shares"] = stock_data.apply(
-        lambda r:  r["shares"] if r["status"] == "buy"
-                else -r["shares"],
-        axis=1
+    principal = 0.0        # 누적 원가
+    position  = 0.0        # 누적 보유 수
+    principals, positions = [], []
+
+    # 2) 거래 행별로 principal / position 업데이트
+    for _, row in df.iterrows():
+        price, shares = row["price"], row["shares"]
+
+        if row["status"] == "buy":
+            principal += price * shares
+            position  += shares
+
+        else:  # sell
+            if position == 0:
+                # 보유 수량 0인데 매도 기록 → 무시
+                print(f"[무시] {row['date'].date()} {ticker} 매도, 보유 0주")
+                principals.append(principal)
+                positions.append(position)
+                continue
+
+            shares_to_sell = min(shares, position)
+            avg_cost = principal / position        # position>0 보장
+            principal -= avg_cost * shares_to_sell
+            position  -= shares_to_sell
+
+        # 포지션 0이면 principal도 0으로 정리(부동소수점 오차 방지)
+        if position == 0:
+            principal = 0.0
+
+        principals.append(principal)
+        positions.append(position)
+
+    df["principal"] = principals
+    df["position"]  = positions
+
+    # 3) 종가 불러와 merge → valuation 계산
+    start = df["date"].min().strftime("%Y-%m-%d")
+    end   = pd.Timestamp.today().strftime("%Y-%m-%d")
+    dates, prices = stock_data.closing_price(ticker, start, end)
+
+    close_df = pd.DataFrame(
+        {"date": pd.to_datetime(dates), "close": prices}
     )
-    stock_data["position"] = stock_data["delta_shares"].cumsum() #누적합을 'position'컬럼에 저장
 
-    #날짜별 마지막 principal·position 값만 남기기
-    stock_data = stock_data.groupby("date", as_index=False).agg({
-        "principal": "last",
-        "position": "last"
-    })
-    
+    df = df.merge(close_df, on="date", how="left")
+    df["close"] = df["close"].ffill().fillna(0)
+    df["valuation"] = df["position"] * df["close"]
 
-    #전체 날짜 범위 생성 (첫 거래일 ~ 현재 날짜 사이, 매일 1일 간격)
-    start_date = stock_data["date"].min()
-    end_date = pd.Timestamp.today().normalize()
-    full_date_index = pd.date_range(start=start_date, end=end_date, freq="D")
-    full_dates = pd.DataFrame({"date": full_date_index})
+    return df[["date", "principal", "position", "close", "valuation"]]
 
-    stock_data = full_dates.merge(stock_data, on="date", how="left")
-    stock_data["principal"] = stock_data["principal"].ffill() #없던 날짜와 값 추가
-    stock_data["position"] = stock_data["position"].ffill() #없던 날짜와 값 추가
-
-    close_dates, close_prices = sd.closing_price(ticker, start_date, end_date) #종가 불러오기
-
-    close_dates = pd.to_datetime(close_dates)
-    price_df = pd.DataFrame({
-        "date": close_dates,
-        "close": close_prices
-    })
-
-    stock_data = stock_data.merge(price_df, on="date", how="left") #“stock_data”에 종가 데이터를 병합
-    stock_data["close"] = stock_data["close"].ffill().fillna(0) #종가가 NaN인 날(※거래소 휴장일 등)은 직전 종가로 채우기(ffill) + 매매 개시 이전엔 0으로 채움
-    stock_data["valuation"] = stock_data["position"] * stock_data["close"] #평가 금액(valuation) 계산: “보유 주식 수 × 종가”
-
-    result = stock_data[["date", "principal", "valuation"]]
-    return stock_data
 
 def input_visualize_ticker(user_id):
     """
