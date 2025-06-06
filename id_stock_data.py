@@ -21,13 +21,15 @@ def csv_create():
             writer = csv.writer(file)
             if not file_exists:
                 writer.writerow(["ticker", "status", "date", "price", "shares"])  # 헤더 작성
+            else:
+                pass
             # writer.writerow([id, pw])  # 사용자 정보 저장
 
 def csv_update(stockdata): #인자: 사용자 주식 정보 튜플
     json_file = Path('user_data.json')
 
     with json_file.open('rt') as fp:
-        usernames = json.load(fp).keys() #id.json 파일의 키값만 모은 리스트
+        usernames = json.load(fp).keys() #id.json 파일의 키값(id)만 모은 리스트
 
     for j in usernames:
         with open(f"{j}.csv", mode="a", newline="", encoding="utf-8") as file:
