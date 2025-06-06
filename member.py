@@ -68,6 +68,8 @@ def signup():
 id_signin = ''
 
 def signin():
+    global id_signin
+
     exit_all = False
 
     json_file = Path('user_data.json')
@@ -105,3 +107,4 @@ def signin():
             print("존재하지 않는 아이디입니다. 다시 입력해주세요")
             continue
         
+    
