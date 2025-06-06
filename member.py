@@ -62,10 +62,10 @@ def signup():
             print("회원가입이 완료되었습니다!")
             break
 
+id_signin = ''
 
 def signin():
     exit_all = False
-    global id_signin
 
     json_file = Path('user_data.json')
 
