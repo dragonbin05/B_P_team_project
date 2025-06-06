@@ -1,15 +1,18 @@
 import re
 from pathlib import Path
 import json
+import id_stock_data
 import member
 
 # 특수문자 존재하면 True 반환!
 def contains_special_char(s): 
     return bool(re.search(r'[^a-zA-Z0-9\s]', s)) # 특수문자를 의미하는 정규표현식: 알파벳, 숫자, 공백을 제외한 문자
 
+id_signin = ''
 data = {}
 
 def signup():
+    global id_signin
     while True:
         json_file = Path('user_data.json')
 
@@ -23,8 +26,8 @@ def signup():
         first = input("로그인하려면 Y, 회원가입하려면 N을 입력하세요: ").lower()
 
         if first == "y": #로그인
-            signin()
-            break
+            id = signin()
+            return id
         elif first == "n": #회원가입
             id = input("회원가입할 ID를 입력하시오: ")
         else:
@@ -64,12 +67,14 @@ def signup():
             #     writer.writerow([id, pw])  # 사용자 정보 저장
 
             print("회원가입이 완료되었습니다!")
-            member.id_signin = id
-            break
+            # —> 새로 만든 ID를 곧바로 로그인 상태로 설정
+            id_signin = id
+            print(f"자동으로 '{id}' 계정에 로그인되었습니다.")
+            return id
 
-id_signin = ''
 
 def signin():
+    global id_signin
     exit_all = False
 
     json_file = Path('user_data.json')
@@ -102,7 +107,7 @@ def signin():
                     #     if pw_signin == data[id_signin]:
                     #         print("로그인되었습니다!")
         if exit_all:
-            break
+            return id_signin
         else:
             print("존재하지 않는 아이디입니다. 다시 입력해주세요")
             continue

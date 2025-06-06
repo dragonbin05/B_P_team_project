@@ -9,9 +9,10 @@ def main():
     """프로그램 진입점: 로그인/회원가입 → 메뉴 선택(거래·포트폴리오·시각화)"""
     # ─────────────────────────────
     # 로그인‧회원가입
-    # ─────────────────────────────
-    member.signup()                   # 로그인 또는 회원가입
-    user_id = member.id_signin        # 로그인된 사용자 ID
+    # ───────────────────────────── 
+    user_id = member.signup()         # 로그인된 사용자 ID
+
+    print(user_id)
 
     # CSV 및 포트폴리오 파일 준비
     id_stock_data.csv_create()                # <user>.csv
