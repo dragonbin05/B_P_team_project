@@ -62,9 +62,11 @@ def signup():
             print("회원가입이 완료되었습니다!")
             break
 
-exit_all = False
 
 def signin():
+    exit_all = False
+    global id_signin
+
     json_file = Path('user_data.json')
 
     with json_file.open('rt') as fp:
@@ -97,5 +99,6 @@ def signin():
         if exit_all:
             break
         else:
-            input("존재하지 않는 아이디입니다. 다시 입력해주세요: ")
-            
+            print("존재하지 않는 아이디입니다. 다시 입력해주세요")
+            continue
+        
