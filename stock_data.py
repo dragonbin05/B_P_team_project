@@ -141,7 +141,9 @@ def input_stock():
           continue
 
         result = resolve_to_ticker(stock_name)
-        if result[0] == None:
+        if stock_name == 'exit' or stock_name == 'EXIT' or stock_name == '종료':
+            break
+        elif result[0] == None:
           print(f"입력을 다시 확인해 주세요. 혹시 {find_company_with_LLM(result[1])}을(를) 찾나요?")
           continue
         else:
