@@ -109,12 +109,12 @@ def input_stock_data(ticker, status):
     #매도 status = 'sell'
     stock_data = []
     if status == 'buy':
-        print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
+        print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요. (ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
     else:
-        print(f'{ticker}를 매도한 날짜, 주당 가격($), 수량을 입력하세요.(ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
+        print(f'{ticker}를 매도한 날짜, 주당 가격($), 수량을 입력하세요. (ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
     while True:
       input_value = input('날짜, 주당 가격, 수량: ').split(',')
-      if input_value == ['exit'] or input_value == ['종료']:
+      if input_value == ['exit'] or input_value == ['종료'] or input_value == ['EXIT']:
           break
       else:
           date, price, shares = input_value
