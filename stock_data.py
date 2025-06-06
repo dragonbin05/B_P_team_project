@@ -3,7 +3,7 @@ import yfinance as yf
 import re
 import string
 from openai import OpenAI
-
+from datetime import date, datetime
 
 def find_company_with_LLM(user_input):
     """
@@ -18,7 +18,7 @@ def find_company_with_LLM(user_input):
     try:
         client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key="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",
+        api_key="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",
         )
         completion = client.chat.completions.create(
         model="meta-llama/llama-3.3-8b-instruct:free",
@@ -159,6 +159,23 @@ def input_stock():
           
     return ticker
 
+def is_valid_dateformat(date_str: str) -> bool:
+    """
+    date_str이 'YYYY-MM-DD' 형식인지 확인합니다.
+    - 올바른 예: '2025-06-15', '1999-12-31'
+    - 잘못된 예: '2025-6-5', '15-06-2025', '2025/06/15', 'abcd-ef-gh'
+    """
+    try:
+        # 1) 정확히 4자리 연도, 2자리 월, 2자리 일 형태여야 함
+        # 2) 예: '2025-06-15'. 만약 '2025-6-5'처럼 앞에 0이 빠지면 오류 발생
+        parsed = datetime.strptime(date_str, "%Y-%m-%d")
+        # 3) 추가 검사: 문자열 전체가 파싱 후에도 동일한지 확인
+        #    예: '2025-06-15abc'는 strptime으로 '2025-06-15'까지만 파싱하므로
+        #    원본과 parsed.strftime 결과가 다르면 False 처리
+        return parsed.strftime("%Y-%m-%d") == date_str
+    except ValueError:
+        return False
+
 def input_stock_data(ticker, status):
     """
     사용자가 입력한 매수/매도 데이터를 수집하여 리스트로 반환합니다.
@@ -178,14 +195,39 @@ def input_stock_data(ticker, status):
     else:
         print(f'{ticker}를 매도한 날짜, 주당 가격($), 수량을 입력하세요. (ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
     while True:
-      input_value = input('날짜, 주당 가격, 수량: ').split(',')
-      if input_value == ['exit'] or input_value == ['종료'] or input_value == ['EXIT']:
-          break
-      else:
-          date, price, shares = input_value
-          price = float(price)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
-          shares = float(shares)
-          stock_data.append((ticker, status, date, price, shares))
+        input_value = input('날짜, 주당 가격, 수량: ')
+        
+        if input_value == 'exit' or input_value == '종료' or input_value == 'EXIT':
+            break
+        
+        input_value = [x.strip() for x in input_value.split(',')]
+        # if len(input_value) != 3:
+        #     print("잘못 입력했습니다.")
+        #     continue
+        p = input_value[0].split('-')
+        q = input_value[0]
+        if is_valid_dateformat(q) == False:
+            print("날짜를 다시 입력해주세요")
+            continue
+
+        today = date.today()
+        if int(p[0]) > today.year or int(p[0]) < 1000:
+            print("날짜를 다시 입력해주세요")
+            continue
+        elif int(p[1]) > 12 or int(p[1]) < 1:
+            print("날짜를 다시 입력해주세요")
+            continue
+        elif int(p[2]) > 31 or int(p[2]) < 1:
+            print("날짜를 다시 입력해주세요")
+            continue
+        elif date.fromisoformat(input_value[0]) > today:
+            print("날짜를 다시 입력해주세요")
+
+
+        date_, price, shares = input_value
+        price = float(price)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+        shares = float(shares)
+        stock_data.append((ticker, status, date_, price, shares))
 
     return stock_data
 

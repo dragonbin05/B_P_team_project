@@ -48,6 +48,8 @@ def main():
 
                 # 날짜·가격·수량 입력
                 rows = stock_data.input_stock_data(ticker, status)
+                if rows == []:
+                    break
                 for row in rows:
                     id_stock_data.csv_update(row)   # 한 줄씩 CSV append
 
