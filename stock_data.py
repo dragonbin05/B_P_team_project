@@ -4,10 +4,6 @@ import re
 import string
 from openai import OpenAI
 
-client = OpenAI(
-  base_url="https://openrouter.ai/api/v1",
-  api_key="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",
-)
 
 def find_company_with_LLM(user_input):
     """
@@ -19,25 +15,33 @@ def find_company_with_LLM(user_input):
     반환:
         company_name (str): LLM이 추천하는 정확한 회사명.
     """
-    completion = client.chat.completions.create(
-    model="meta-llama/llama-3.3-8b-instruct:free",
-    messages=[
-        {
-        "role": 'system',
-        "content":"You are an assistant that receives a possibly mistyped ticker symbol, company name, or ETF name. Your job is to identify the single most similar valid investment item and output **exactly** its official “name” (not the ticker), with **no** additional words, explanations, or punctuation—just the name itself."
-        },
-        {
-        "role": "user",
-        "content": user_input
-        }
-    ]
-    )
-    return completion.choices[0].message.content
+    try:
+        client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key="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",
+        )
+        completion = client.chat.completions.create(
+        model="meta-llama/llama-3.3-8b-instruct:free",
+        messages=[
+            {
+            "role": 'system',
+            "content":"You are an assistant that receives a possibly mistyped ticker symbol, company name, or ETF name. Your job is to identify the single most similar valid investment item and output **exactly** its official “name” (not the ticker), with **no** additional words, explanations, or punctuation—just the name itself."
+            },
+            {
+            "role": "user",
+            "content": user_input
+            }
+        ]
+        )
+        return completion.choices[0].message.content
+    except Exception:
+        # 호출 실패 시 빈 리스트 반환
+        return ["LLM 오류로 인해 OFF 전환"]
 
 def is_valid_ticker(ticker: str):
     """
     주어진 티커(symbol)가 유효한지 확인합니다.
-    yfinance 라이브러리를 사용하여 정보가 존재하는지 검사합니다.
+    yfinance 라이브러리를 사용하여 정보가 존재하는지 검사합니다.S
 
     매개변수:
         ticker (str): 확인할 티커 문자열.
