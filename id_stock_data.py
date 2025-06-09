@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 import json
 import stock_data
-import ast
 import pandas as pd
 
 def csv_create():
@@ -42,7 +41,7 @@ def sort_all_user_files_by_date(): # 주식 데이터를 날짜순으로 정렬
     with json_file.open('rt') as fp:
         usernames = json.load(fp).keys()
     for user in usernames:
-        df = pd.read_csv(f"{user}.csv", parse_dates=["date"])
+        df = pd.read_csv(f"{user}.csv", parse_dates=["date"], date_format="%Y-%m-%d")
         df.sort_values("date", inplace=True)
         df.to_csv(f"{user}.csv", index=False)
 
@@ -90,9 +89,14 @@ def portfolio(id):
             #     break
         else:
             ratio = input(f"{ticker.upper()}의 비율을 입력해주세요: ")
+
+        if type(ratio) != float and type(ratio) != int and int(ratio) > 100:
+            print("비율이 잘못되었습니다. 다시 입력해주세요")
+        else:
             portfoliocsv_create(id)
             k = (ticker.upper(), ratio)
             portfoliocsv_update(id, k)
+                ### 비율이 100이 넘으면 오류 리턴/ 티커, 비율이 각 형식에 맞도록 확인
 
         continue
         # portfoliocsv_create(id)
