@@ -5,13 +5,35 @@ import id_stock_data
 import member
 
 # 특수문자 존재하면 True 반환!
-def contains_special_char(s): 
+def contains_special_char(s):
+    """
+    문자열에 특수문자가 포함되어 있는지 확인하는 함수.
+
+    Args:
+        s (str): 검사할 문자열
+
+    Returns:
+        bool: 특수문자가 하나라도 포함되어 있으면 True, 아니면 False
+    """
     return bool(re.search(r'[^a-zA-Z0-9\s]', s)) # 특수문자를 의미하는 정규표현식: 알파벳, 숫자, 공백을 제외한 문자
 
 id_signin = ''
 data = {}
 
 def signup():
+    """
+    사용자에게 회원가입 또는 로그인을 선택하게 하고, 회원가입/로그인 로직을 처리하는 함수.
+
+    Returns:
+        str: 로그인(또는 회원가입 후 자동 로그인)한 사용자의 ID
+
+    기능:
+        - user_data.json 파일에서 사용자 정보를 읽어옴.
+        - 'Y' 입력 시 로그인, 'N' 입력 시 회원가입 절차 진행.
+        - 회원가입 시 ID 중복 체크, 비밀번호에 특수문자 포함 검증, user_data.json에 정보 저장.
+        - 회원가입이 끝나면 자동으로 로그인 상태가 됨.
+        - 잘못된 입력은 다시 입력하도록 안내.
+    """
     global id_signin
     while True:
         json_file = Path('user_data.json')
@@ -74,6 +96,18 @@ def signup():
 
 
 def signin():
+    """
+    사용자에게 아이디와 비밀번호를 입력받아 로그인 절차를 진행하는 함수.
+
+    Returns:
+        str: 로그인에 성공한 사용자의 ID
+
+    기능:
+        - user_data.json 파일에서 사용자 정보를 읽어옴.
+        - 아이디와 비밀번호가 일치하면 로그인 성공, 아니면 계속 재입력 요청.
+        - 없는 아이디 입력 시 다시 입력 안내.
+        - 로그인에 성공하면 해당 ID를 반환.
+    """
     global id_signin
     exit_all = False
 
