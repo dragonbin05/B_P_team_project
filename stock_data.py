@@ -272,14 +272,12 @@ def closing_price(ticker, start_date, end_date):
 
 def manage_trades(user_id: str):
     """
-    사용자 ID 기반 CSV 파일(user_id.csv)을 상호작용하여 오류 거래를 정리합니다.
-    1) 매도량 > 누적 보유량인 거래(오류 거래) 목록을 보여줍니다.
-    2) 각 오류 거래에 대해:
-       - [D]elete: 삭제
-       - [S]kip: 건너뛰기
-       - [1] 수정 (수량)
-       - [2] 수정 (가격)
-    3) 최종 데이터를 원본 CSV에 덮어씁니다.
+    CSV 파일(user_id.csv)에서 오류 거래를 정리합니다.
+
+    1) 매도량 > 누적 보유량 거래 목록 출력
+    2) 각 거래에 대해: [D]=삭제, [S/Enter]=건너뛰기, [1]=수량 수정, [2]=가격 수정
+    3) 수량이 0인 거래는 자동 삭제
+    4) 최종 데이터를 원본 CSV에 덮어쓰기
     """
     path = f"{user_id}.csv"
     df = pd.read_csv(path, parse_dates=['date'])
@@ -291,27 +289,28 @@ def manage_trades(user_id: str):
           .cumsum()
           .shift(fill_value=0)
     )
-    # 오류 거래 식별
+
+    # 오류 거래 추출
     mask_error = (df['status'] == 'sell') & (df['shares'] > df['running_position'])
     errors = df.loc[mask_error, ['ticker', 'date', 'status', 'shares', 'price']]
 
     if errors.empty:
-        print("[manage_trades] 오류 거래가 없습니다.")
+        print(f"[manage_trades] '{path}' 파일에 오류 거래가 없습니다.")
     else:
-        print("[manage_trades] 오류 거래 목록:")
+        print(f"[manage_trades] '{path}' 오류 거래 목록:")
         print(errors.to_string(index=True))
 
         for idx, row in errors.iterrows():
             print(f"\nIndex {idx}: {row['ticker']} on {row['date'].date()} - {row['status']} {row['shares']} @ {row['price']}")
-            choice = input("(D)elete, (1)Edit shares, (2)Edit price, (Enter)Skip: ").strip().lower()
+            choice = input("삭제(d), 건너뛰기(s/Enter), 수량 수정(1), 가격 수정(2): ").strip().lower()
 
             if choice == 'd':
                 df.drop(idx, inplace=True)
                 print(f"-> Index {idx} deleted.")
             elif choice == '1':
                 new_shares = input("New shares: ").strip()
-                if new_shares.isdigit():
-                    df.at[idx, 'shares'] = int(new_shares)
+                if new_shares.replace('.', '', 1).isdigit():
+                    df.at[idx, 'shares'] = float(new_shares)
                     print(f"-> Shares updated to {new_shares}.")
                 else:
                     print("Invalid input. Skipped.")
@@ -325,7 +324,13 @@ def manage_trades(user_id: str):
             else:
                 print("-> Skipped.")
 
-    # CSV 갱신
+    # 임시 컬럼 제거 및 수량 0 자동 삭제
     final_df = df.drop(columns=['signed_shares', 'running_position'])
+    zero_mask = final_df['shares'] == 0.0
+    if zero_mask.any():
+        print(f"[manage_trades] 수량 0인 거래 {zero_mask.sum()}건 자동 삭제.")
+        final_df = final_df.loc[~zero_mask]
+
+    # 파일 저장
     final_df.to_csv(path, index=False)
     print(f"[manage_trades] '{path}' 파일이 업데이트되었습니다.")
