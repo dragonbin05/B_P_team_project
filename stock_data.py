@@ -36,8 +36,8 @@ def find_company_with_LLM(user_input):
         )
         return completion.choices[0].message.content
     except Exception:
-        # 호출 실패 시 빈 리스트 반환
-        return ["LLM 오류로 인해 OFF 전환"]
+        # 호출 실패 None 반환
+        return None
 
 def is_valid_ticker(ticker: str):
     """
@@ -148,8 +148,13 @@ def input_stock():
 
         result = resolve_to_ticker(stock_name)
         if result[0] == None:
-          print(f"입력을 다시 확인해 주세요. 혹시 {find_company_with_LLM(result[1])}을(를) 찾나요?")
-          continue
+            print("입력을 다시 확인해 주세요.")
+            LLM = find_company_with_LLM(result[1])
+            if LLM == None:
+                pass
+            else:
+                print(f"혹시 {LLM}을(를) 찾나요?")
+            continue
         else:
           ticker, company_name = result
           yn = input(f"{ticker}, {company_name}가 맞나요?(Y/N): ").upper()
