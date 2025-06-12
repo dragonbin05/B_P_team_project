@@ -207,9 +207,10 @@ def input_stock_data(ticker, status):
             break
         
         input_value = [x.strip() for x in input_value.split(',')]
-        # if len(input_value) != 3:
-        #     print("잘못 입력했습니다.")
-        #     continue
+        if len(input_value) != 3:
+            print("입력을 확인해주세요.")
+            continue
+
         p = input_value[0].split('-')
         q = input_value[0]
         if is_valid_dateformat(q) == False:
@@ -231,8 +232,12 @@ def input_stock_data(ticker, status):
 
 
         date_, price, shares = input_value
-        price = float(price)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
-        shares = float(shares)
+        try:
+            price = float(price)
+            shares = float(shares)
+        except ValueError:
+            print("입력을 확인해주세요")
+            continue
         stock_data.append((ticker, status, date_, price, shares))
 
     return stock_data
