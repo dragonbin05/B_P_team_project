@@ -64,6 +64,14 @@ def main():
             id_stock_data.portfolio(user_id)
             print("포트폴리오 설정 완료!\n")
 
+            # main.py의 포트폴리오 설정 뒤에 아래 코드 추가
+            if __name__ == "__main__":
+                # ... 기존 main 함수 실행 ...
+                # 예시로 아래만 따로 실행하려면 user_id 변수 직접 할당해도 됨
+                # user_id = "test" 등
+                id_stock_data.check_and_edit_portfolio_ratio(user_id)
+                id_stock_data.remove_zero_ratio_rows(user_id)
+
         # 3) 시각화 서브 메뉴
         elif choice == "3":
             while True:

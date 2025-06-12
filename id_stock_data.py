@@ -197,3 +197,85 @@ def portfolio(id):
         # portfoliocsv_create(id)
         # portfoliocsv_update(id, [j.strip() for j in ticker.split(',')])
         # a = input("\'티커, 비율\'을 입력해주세요: ")
+
+def check_and_edit_portfolio_ratio(user_id):
+    file_path = f"port_{user_id}.csv"
+
+    while True:
+        # 파일 불러오기
+        try:
+            df = pd.read_csv(file_path)
+        except FileNotFoundError:
+            print("포트폴리오 파일이 없습니다.")
+            return
+
+        # ratio 합계 계산
+        try:
+            df['ratio'] = df['ratio'].astype(float)
+        except Exception:
+            print("ratio 컬럼에 숫자가 아닌 값이 있습니다. CSV를 확인하세요.")
+            return
+
+        total_ratio = df['ratio'].sum()
+        if total_ratio <= 100:
+            print("포트폴리오 비율의 총합이 100 이하입니다.")
+            break
+
+        print(f"\n⚠️ [경고] 포트폴리오 비율의 총합이 {total_ratio:.1f}로 100을 초과했습니다.")
+        print(f"수정이 필요합니다. 현재 데이터:")
+        print(df.reset_index())
+
+        # 수정할 항목 선택
+        idx = input("\n수정할 행의 index 번호를 입력하세요 (취소하려면 Enter): ")
+        if idx == "":
+            print("수정 작업을 취소했습니다.")
+            break
+        if not idx.isdigit() or int(idx) not in df.index:
+            print("유효한 인덱스 번호를 입력하세요.")
+            continue
+        idx = int(idx)
+
+        # 어떤 값 수정할지
+        print(f"\n수정할 내용: {df.loc[idx]}")
+        col = input("수정할 컬럼명을 입력하세요 (예: ratio, ticker): ")
+        if col not in df.columns:
+            print("존재하지 않는 컬럼입니다.")
+            continue
+        new_value = input(f"{col}의 새 값을 입력하세요: ")
+        # 타입 변환 (ratio는 float, ticker는 str)
+        if col == "ratio":
+            try:
+                new_value = float(new_value)
+            except ValueError:
+                print("숫자만 입력 가능합니다.")
+                continue
+        df.at[idx, col] = new_value
+
+        # 수정 후 저장
+        df.to_csv(file_path, index=False)
+        print(f"{idx}번 행의 {col}이(가) 성공적으로 수정되었습니다. 파일이 업데이트 되었습니다.")
+
+        # 합이 100 이하가 될 때까지 반복
+        # 바로 break하지 않으면 연속으로 여러 항목을 수정할 수 있음
+
+def remove_zero_ratio_rows(user_id):
+    """
+    port_{user_id}.csv 파일에서 ratio가 0인 행을 모두 삭제하고 파일을 업데이트하는 함수.
+    """
+    file_path = f"port_{user_id}.csv"
+
+    try:
+        df = pd.read_csv(file_path)
+    except FileNotFoundError:
+        print("포트폴리오 파일이 없습니다.")
+        return
+
+    # ratio가 0인 행만 필터링해서 삭제
+    df['ratio'] = df['ratio'].astype(float)
+    before = len(df)
+    df = df[df['ratio'] != 0]
+    after = len(df)
+
+    df.to_csv(file_path, index=False)
+
+    print(f"ratio가 0인 {before - after}개 행을 삭제했습니다.")
