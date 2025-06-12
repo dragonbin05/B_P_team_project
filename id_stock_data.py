@@ -162,29 +162,34 @@ def portfolio(id):
     print("포트폴리오 설정을 시작합니다. 종료하려면 'exit' 또는 '종료'를 입력해주세요.")
 
     while True:
-        ticker = input("티커를 입력해주세요: ")
+        ticker = stock_data.input_stock()
 
         if ticker == '종료' or ticker.lower() == 'exit':
             print("포트폴리오 입력을 종료합니다.")
             break
 
-        ticker = stock_data.resolve_to_ticker(ticker)
-        if ticker[0] == None:
-            print("티커가 잘못되었습니다. 다시 입력해주세요")
+        ticker_res = stock_data.resolve_to_ticker(ticker)
+        if ticker_res[0] == None:
+            a = input("티커가 잘못되었습니다. 종료하시겠습니까? [Y/N]")
+
+            if a == 'Y':
+                break
+
+            print("다시 입력해주세요")
             continue
             # if ticker == 'exit' or ticker == 'EXIT' or ticker == '종료':
             #     print("포트폴리오 입력을 종료합니다.")
             #     break
         else:
-            ratio = input(f"{ticker[0].upper()}의 비율을 입력해주세요: ")
+            ratio = input(f"{ticker_res[0].upper()}의 비율을 입력해주세요: ")
             
-        if type(ratio) != float and type(ratio) != int:
+        if ratio.isdigit() == False:
             print("잘못 입력했습니다. 숫자를 입력해주세요.")
         elif float(ratio) > 100 or float(ratio) < 0:
             print("비율이 잘못되었습니다. 다시 입력해주세요")
         else:
             portfoliocsv_create(id)
-            k = (ticker[0].upper(), ratio)
+            k = (ticker_res[0].upper(), ratio)
             portfoliocsv_update(id, k)
                 ### 비율이 100이 넘으면 오류 리턴/ 티커, 비율이 각 형식에 맞도록 확인
 
