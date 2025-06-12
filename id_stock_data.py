@@ -143,23 +143,28 @@ def portfoliocsv_update(id, portfolio):
 
 def portfolio(id):
     """
-    사용자의 주식 포트폴리오를 인터랙티브하게 입력받아서 파일로 저장하는 함수.
+    사용자의 주식 포트폴리오를 인터랙티브하게 입력받아 'port_{id}.csv' 파일에 저장하는 함수.
+    같은 티커를 여러 번 입력하면 마지막에 입력한 ratio로 덮어씀.
 
     Args:
         id (str): 사용자 ID. 입력받은 정보는 'port_{id}.csv' 파일에 저장됨.
-
-    기능:
-        - 사용자가 직접 주식 티커와 비율을 반복적으로 입력하게 함.
-        - 'exit' 또는 '종료' 입력 시 입력 종료.
-        - ticker가 올바르지 않으면 재입력 요청.
-        - 비율(ratio)이 0~100 사이의 숫자가 아니면 재입력 요청.
-        - 각 입력값이 유효하면 ('티커', '비율') 형태로 CSV 파일에 한 줄씩 저장.
-        - 입력 도중 언제든 종료 가능.
-
-    사용 예시:
-        portfolio('user1')
     """
+    import pandas as pd
+
     print("포트폴리오 설정을 시작합니다. 종료하려면 'exit' 또는 '종료'를 입력해주세요.")
+
+    file_path = f"port_{id}.csv"
+    portfoliocsv_create(id)  # 파일 및 헤더 생성
+
+    # 기존 데이터 불러오기
+    try:
+        df = pd.read_csv(file_path)
+        if df.empty:
+            df = pd.DataFrame(columns=["ticker", "ratio"])
+        df["ticker"] = df["ticker"].astype(str).str.upper()
+        df["ratio"] = df["ratio"].astype(float)
+    except Exception:
+        df = pd.DataFrame(columns=["ticker", "ratio"])
 
     while True:
         ticker = stock_data.input_stock()
@@ -169,34 +174,39 @@ def portfolio(id):
             break
 
         ticker_res = stock_data.resolve_to_ticker(ticker)
-        if ticker_res[0] == None:
+        if ticker_res[0] is None:
             a = input("티커가 잘못되었습니다. 종료하시겠습니까? [Y/N]")
-
-            if a == 'Y':
+            if a.strip().upper() == 'Y':
                 break
-
             print("다시 입력해주세요")
             continue
-            # if ticker == 'exit' or ticker == 'EXIT' or ticker == '종료':
-            #     print("포트폴리오 입력을 종료합니다.")
-            #     break
-        else:
-            ratio = input(f"{ticker_res[0].upper()}의 비율을 입력해주세요: ")
-            
-        if ratio.isdigit() == False:
-            print("잘못 입력했습니다. 숫자를 입력해주세요.")
-        elif float(ratio) > 100 or float(ratio) < 0:
-            print("비율이 잘못되었습니다. 다시 입력해주세요")
-        else:
-            portfoliocsv_create(id)
-            k = (ticker_res[0].upper(), ratio)
-            portfoliocsv_update(id, k)
-                ### 비율이 100이 넘으면 오류 리턴/ 티커, 비율이 각 형식에 맞도록 확인
 
-        continue
-        # portfoliocsv_create(id)
-        # portfoliocsv_update(id, [j.strip() for j in ticker.split(',')])
-        # a = input("\'티커, 비율\'을 입력해주세요: ")
+        ratio = input(f"{ticker_res[0].upper()}의 비율을 입력해주세요: ")
+        try:
+            ratio_val = float(ratio)
+        except ValueError:
+            print("잘못 입력했습니다. 숫자를 입력해주세요.")
+            continue
+
+        if ratio_val > 100 or ratio_val < 0:
+            print("비율이 잘못되었습니다. 다시 입력해주세요")
+            continue
+
+        ticker_upper = ticker_res[0].upper()
+        # 이미 존재하는 티커라면 마지막 값으로 덮어쓰기
+        if ticker_upper in df["ticker"].values:
+            df.loc[df["ticker"] == ticker_upper, "ratio"] = ratio_val
+            print(f"{ticker_upper}의 비율을 {ratio_val}으로 수정했습니다.")
+        else:
+            # 없으면 새로 추가
+            df = pd.concat([df, pd.DataFrame({"ticker": [ticker_upper], "ratio": [ratio_val]})], ignore_index=True)
+            print(f"{ticker_upper}이(가) 추가되었습니다.")
+
+        # 저장
+        df.to_csv(file_path, index=False)
+
+    print("포트폴리오 입력이 완료되었습니다.")
+
 
 def check_and_edit_portfolio_ratio(user_id):
     file_path = f"port_{user_id}.csv"
