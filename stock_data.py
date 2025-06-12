@@ -211,8 +211,8 @@ def input_stock_data(ticker, status):
             continue
 
         today = date.today()
-        if int(p[0]) > today.year or int(p[0]) < 1000:
-            print("날짜를 다시 입력해주세요")
+        if int(p[0]) > today.year or int(p[0]) < 2000:
+            print("날짜를 다시 입력해주세요. 이 프로그램은 2000년부터 저장 가능합니다.")
             continue
         elif int(p[1]) > 12 or int(p[1]) < 1:
             print("날짜를 다시 입력해주세요")
