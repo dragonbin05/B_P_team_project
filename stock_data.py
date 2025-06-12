@@ -4,6 +4,7 @@ import re
 import string
 from openai import OpenAI
 from datetime import date, datetime
+import pandas as pd
 
 def find_company_with_LLM(user_input):
     """
@@ -258,3 +259,63 @@ def closing_price(ticker, start_date, end_date):
     close_prices = [float(p) for p in hist["Close"].tolist()]
 
     return date_list, close_prices # (날짜 리스트, 종가 리스트)
+
+def manage_trades(user_id: str):
+    """
+    사용자 ID 기반 CSV 파일(user_id.csv)을 상호작용하여 오류 거래를 정리합니다.
+    1) 매도량 > 누적 보유량인 거래(오류 거래) 목록을 보여줍니다.
+    2) 각 오류 거래에 대해:
+       - [D]elete: 삭제
+       - [S]kip: 건너뛰기
+       - [1] 수정 (수량)
+       - [2] 수정 (가격)
+    3) 최종 데이터를 원본 CSV에 덮어씁니다.
+    """
+    path = f"{user_id}.csv"
+    df = pd.read_csv(path, parse_dates=['date'])
+
+    # 누적 포지션 계산
+    df['signed_shares'] = df['shares'] * df['status'].map({'buy': 1, 'sell': -1})
+    df['running_position'] = (
+        df.groupby('ticker')['signed_shares']
+          .cumsum()
+          .shift(fill_value=0)
+    )
+    # 오류 거래 식별
+    mask_error = (df['status'] == 'sell') & (df['shares'] > df['running_position'])
+    errors = df.loc[mask_error, ['ticker', 'date', 'status', 'shares', 'price']]
+
+    if errors.empty:
+        print("[manage_trades] 오류 거래가 없습니다.")
+    else:
+        print("[manage_trades] 오류 거래 목록:")
+        print(errors.to_string(index=True))
+
+        for idx, row in errors.iterrows():
+            print(f"\nIndex {idx}: {row['ticker']} on {row['date'].date()} - {row['status']} {row['shares']} @ {row['price']}")
+            choice = input("(D)elete, (1)Edit shares, (2)Edit price, (Enter)Skip: ").strip().lower()
+
+            if choice == 'd':
+                df.drop(idx, inplace=True)
+                print(f"-> Index {idx} deleted.")
+            elif choice == '1':
+                new_shares = input("New shares: ").strip()
+                if new_shares.isdigit():
+                    df.at[idx, 'shares'] = int(new_shares)
+                    print(f"-> Shares updated to {new_shares}.")
+                else:
+                    print("Invalid input. Skipped.")
+            elif choice == '2':
+                new_price = input("New price: ").strip()
+                try:
+                    df.at[idx, 'price'] = float(new_price)
+                    print(f"-> Price updated to {new_price}.")
+                except ValueError:
+                    print("Invalid input. Skipped.")
+            else:
+                print("-> Skipped.")
+
+    # CSV 갱신
+    final_df = df.drop(columns=['signed_shares', 'running_position'])
+    final_df.to_csv(path, index=False)
+    print(f"[manage_trades] '{path}' 파일이 업데이트되었습니다.")

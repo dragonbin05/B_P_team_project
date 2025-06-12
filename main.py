@@ -54,7 +54,9 @@ def main():
 
             # 입력 종료 후 날짜순 정렬
             id_stock_data.sort_all_user_files_by_date()
-            print("거래 내역 정렬 완료!\n")
+
+            # 입력 종료 후 거래 오류 내역 수정
+            stock_data.manage_trades(user_id)
 
         # 2) 포트폴리오 설정
         elif choice == "2":
