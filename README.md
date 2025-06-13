@@ -8,7 +8,6 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 </div>
 
@@ -44,7 +43,6 @@ B_P_team_project/
 ## ⚡️ 빠른 시작
 
 1. **설치**
-
 ```bash
 git clone https://github.com/dragonbin05/B_P_team_project.git
 cd B_P_team_project
@@ -59,6 +57,7 @@ python main.py
 
 
 ## 🖥️ 사용법 & 화면 예시
+*주의사항*: 가상환경을 이용하면 yfinance 라이브러리에서 종가 호출이 불가능합니다. 가상환경을 사용하지 말아주세요
 1. 첫 화면 ― 회원가입 / 로그인
 입력   동작
 Y   ID·PW 검증 성공 시 로그인 성공
