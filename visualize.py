@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import stock_data
 from functools import reduce
+import matplotlib.ticker as mticker
 
 def get_principal_and_position(user_id: str, ticker: str):
     """
@@ -195,6 +196,10 @@ def visualize_stock(edited_stock_data):
     fig, ax = plt.subplots()
     edited_stock_data.plot(x='date', y='total_principal', ax=ax, label='원금', color='black')
     edited_stock_data.plot(x='date', y='total_valuation', ax=ax, label='평가금액', color='blue')
+
+    # y축 콤마 포맷터 적용
+    ax.yaxis.set_major_formatter(mticker.StrMethodFormatter('{x:,.0f}'))
+
     ax.set_title("원금, 평가금액")
     ax.set_xlabel('date')
     ax.set_ylabel('달러($)')
