@@ -19,7 +19,7 @@ def find_company_with_LLM(user_input):
     try:
         client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
-        api_key="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",
+        api_key="<OPENROUTER_API_KEY>",
         )
         completion = client.chat.completions.create(
         model="meta-llama/llama-3.3-8b-instruct:free",
