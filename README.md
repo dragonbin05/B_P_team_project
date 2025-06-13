@@ -94,7 +94,7 @@ python main.py
 - pandas
 - matplotlib
 - yfinance
-- OpenAI (LLM 추천)
+- OpenAI
 - 기타 표준 라이브러리
 
 ---
