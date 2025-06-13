@@ -107,7 +107,7 @@ python main.py
 ## 📄 라이선스
 
 MIT License  
-Copyright (c) 2024
+Copyright (c) 2025
 
 ---
 
