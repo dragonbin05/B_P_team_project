@@ -3,6 +3,8 @@
 # 📈 B_P_team_project  
 **주식 거래 관리 · 포트폴리오 비중 설정 · 데이터 시각화 통합 솔루션**
 
+<img src="docs/banner.png" width="70%" alt="B_P_team_project Banner">
+
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
