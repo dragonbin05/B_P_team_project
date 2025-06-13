@@ -1,36 +1,119 @@
-# B_P_team_project
-기초프로그래밍 팀 프로젝트
-20252822 김용빈
-20251831 주이찬
+<div align="center">
 
-commit 형식 날짜 시각 파일이름 upload/edit/remove (추가한 기능 설명)
-(ex) 20250509 21:07 test.py edit (프린트 기능 추가)
+# 📈 B_P_team_project  
+**주식 거래 관리 · 포트폴리오 비중 설정 · 데이터 시각화 통합 솔루션**
 
-<프로젝트 주제: 정립식 투자 시스템>
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-[데이터]
-1. 사용자 회원가입(이름, 아이디, 비밀번호)
-2. 사용자 로그인, 로그아웃
-3. 사용자 매매내역 불러오기 -> API를 이용하여 자동으로 동기화하기 / 사용자가 직접 입력하기
-4. 사용자 매매내역 업데이트 -> API를 이용하여 자동으로 동기화하기 / 사용자가 직접 추가하기
+</div>
 
-[기능]
-1. 목표 포트폴리오 비율 설정
-2. 사용자가 포트폴리오 조정시 목표 포트폴리오 비율 수정
-3. 총원금 대비 종목별 투자 원금 비율
-4. 총 평가금액 대비 종목별 평가금액
-5. 한 종목에서 원금과 평가금액을 비교
-6. 포트폴리오 비율과 원금 비율 비교 -> 어디에 더 투자해야 되는지 + 사용자가 매매를 원한다면 다른 HTS, MTS 없이 시스템이 대신 해주기
+---
 
-[아이디어] 좋은 아이디어 있으면 이름 옆에 적으면 됨
-[김용빈]
-[주이찬]
+> **개인별 주식 거래 입력, 포트폴리오 설정, 오류 자동 감지,  
+> 실시간 비율 합계 체크, 데이터 편집,  
+> 파이/꺾은선 그래프 시각화까지 한번에!**
 
-[해야할 일]
-1. csv파일 저장 방법 바꾸기
-2. 처음에 회원가입/로그인 여부 물어보기
-3. 로그인 기능 만들기
-4. 로그인 한 후 매수/매도 입력 기능
-5. 그래프(평가금액과 원금) 전체 목록/종목 하나당 겹쳐서 출력
-6. 포트폴리오 설정
-7. 포트폴리오와 실제 원금 비율 차이 -> 어디에 얼마 넣어야 하는지
+---
+
+## 🚀 주요 기능
+
+- **회원가입 / 로그인** : 사용자별 계정 관리
+- **거래 입력 & 관리** : 주식 매수/매도 내역 기록, 거래 오류 자동 감지/수정
+- **포트폴리오 비중 설정** : 티커별 비율, 합계 100 초과시 경고·즉시 편집
+- **CSV 자동 저장** : 각 사용자별 거래/포트폴리오 파일 분리 관리
+- **데이터 시각화** : 포트폴리오·보유종목 비율, 평가금액 그래프 제공
+
+---
+
+## 🗂️ 폴더 구조
+
+```
+B_P_team_project/
+│
+├── main.py               # 메인 진입점(전체 메뉴/로직)
+├── member.py             # 회원가입/로그인
+├── id_stock_data.py      # 거래/포트폴리오 CSV 관리
+├── stock_data.py         # 주식 입력/오류 거래 관리
+├── visualize.py          # 시각화 함수
+├── user_data.json        # 계정 정보
+├── <user>.csv            # 거래내역
+├── port_<user>.csv       # 포트폴리오 비중
+├── requirements.txt      # 필요 라이브러리
+└── README.md
+```
+
+---
+
+## ⚡️ 빠른 시작
+
+1. **설치**
+
+```bash
+git clone https://github.com/dragonbin05/B_P_team_project.git
+cd B_P_team_project
+pip install -r requirements.txt
+```
+
+2. **실행**
+
+```bash
+python main.py
+```
+
+- 첫 실행시 회원가입 후 로그인
+- 메뉴에서 거래 입력/포트폴리오 설정/시각화 선택
+
+---
+
+## 🖥️ 사용법 & 화면 예시
+
+| 메뉴                 | 설명                                                |
+|----------------------|-----------------------------------------------------|
+| 거래 입력            | 매수/매도 거래 입력, 오류 거래 자동 감지·수정       |
+| 포트폴리오 비중 설정 | 티커별 비율, 100 초과시 경고/수정                   |
+| 시각화               | 파이차트·꺾은선그래프로 비중·평가금액 확인           |
+
+<details>
+<summary>예시 이미지 보기</summary>
+
+<img src="docs/portfolio_example.png" width="400" alt="포트폴리오 비중 예시">
+<img src="docs/pie_chart_example.png" width="400" alt="파이차트 예시">
+
+</details>
+
+---
+
+## 🛠️ 사용 기술
+
+- Python 3.10+
+- pandas
+- matplotlib
+- yfinance
+- OpenAI (LLM 추천)
+- 기타 표준 라이브러리
+
+---
+
+## 🙌 기여 방법
+
+1. **이슈 등록** 또는 **PR 요청** 환영!
+2. 버그/기능 추가/사용성 개선 아이디어 자유롭게 남겨주세요.
+
+---
+
+## 📄 라이선스
+
+MIT License  
+Copyright (c) 2024
+
+---
+
+<div align="center">
+
+⭐️ **프로젝트가 도움됐다면 Star 한 번 눌러주면 힘이 됩니다!** ⭐️  
+문의: [GitHub Issue](https://github.com/dragonbin05/B_P_team_project/issues)
+
+</div>
