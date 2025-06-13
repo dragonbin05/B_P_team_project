@@ -106,10 +106,6 @@ def portfoliocsv_create(id):
         portfoliocsv_create('user1')
         # 'port_user1.csv' 파일이 없으면 헤더와 함께 생성되고, 있으면 아무 변화 없음.
     """
-    # json_file = Path(f'port_{id}.csv')
-
-    # with json_file.open('rt') as fp:
-    #     usernames = json.load(fp).keys() #id.json 파일의 키값만 모은 리스트
 
     file_exists = os.path.isfile(f"port_{id}.csv")
 

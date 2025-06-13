@@ -285,9 +285,3 @@ def visualize_principal_portfolio(user_id):
     ax.axis("equal")  # 파이를 원형으로 그리기 위해
     plt.tight_layout()
     plt.show()
-
-# visualize_principal_portfolio('test')
-
-# p = input_visualize_ticker('test')
-# q = get_selected_portfolio('test', p)
-# visualize_stock(q)

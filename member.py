@@ -1,8 +1,6 @@
 import re
 from pathlib import Path
 import json
-import id_stock_data
-import member
 
 # 특수문자 존재하면 True 반환!
 def contains_special_char(s):
@@ -77,17 +75,6 @@ def signup():
             with json_file.open('w+t') as fp:
                 json.dump(data, fp)
 
-            # # 파일이 없으면 헤더 추가, 있으면 헤더 없이 이어서 저장
-            # file_exists = os.path.isfile("user_data.csv")
-
-            # with open("user_data.csv", mode="a", newline="", encoding="utf-8") as file:
-            #     writer = csv.writer(file)
-
-            #     if not file_exists:
-            #         writer.writerow(["username", "password"])  # 헤더 작성
-
-            #     writer.writerow([id, pw])  # 사용자 정보 저장
-
             print("회원가입이 완료되었습니다!")
             # —> 새로 만든 ID를 곧바로 로그인 상태로 설정
             id_signin = id
@@ -137,9 +124,6 @@ def signin():
                 else:
                     pw_signin = input("비밀번호가 틀렸습니다. 다시 입력해주세요: ")
                     continue
-                    # while True:
-                    #     if pw_signin == data[id_signin]:
-                    #         print("로그인되었습니다!")
         if exit_all:
             return id_signin
         else:
