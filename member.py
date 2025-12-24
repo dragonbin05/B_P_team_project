@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 import json
+import streamlit as st
 
 # 특수문자 존재하면 True 반환!
 def contains_special_char(s):
@@ -33,53 +34,49 @@ def signup():
         - 잘못된 입력은 다시 입력하도록 안내.
     """
     global id_signin
-    while True:
-        json_file = Path('user_data.json')
 
-        if json_file.exists() and json_file.stat().st_size > 0:
-            with json_file.open('r', encoding='utf-8') as f:
-                data = json.load(f)
-        else:
-            with json_file.open('w+t') as fp:
-                json.dump(data, fp)
+    json_file = Path('user_data.json')
 
-        first = input("로그인하려면 Y, 회원가입하려면 N을 입력하세요: ").lower()
+    if json_file.exists() and json_file.stat().st_size > 0:
+        with json_file.open('r', encoding='utf-8') as f:
+            data = json.load(f)
+    else:
+        with json_file.open('w+t') as fp:
+            json.dump(data, fp)
 
-        if first == "y": #로그인
-            id = signin()
-            return id
-        elif first == "n": #회원가입
-            id = input("회원가입할 ID를 입력하시오: ")
-        else:
-            print("잘못 입력했습니다. 다시 입력해주세요")
-            continue
+    first = st.radio("선택하세요", ('Login', 'Sign Up'))
 
+    if first == "Login": #로그인
+        id = signin()
+        return id
+    else: #회원가입
+        id = st.text_input("회원가입할 ID를 입력하시오: ")
+
+    if id != '':
         with json_file.open('rt') as fp:
             usernames = json.load(fp).keys() #id:pw json 파일
 
         if id in usernames:
-            print("이미 존재하는 아이디입니다. 다른 아이디를 사용해주세요")
-            continue
+            st.warning("이미 존재하는 아이디입니다. 다른 아이디를 사용해주세요")
         else:
-            print("Password는 영어 소문자, 숫자, 특수기호를 사용할 수 있으며, 특수기호는 적어도 한 개 이상 사용해야 합니다.")
-            pw = input("Password를 입력하시오: ")
+            st.write("Password는 **영어 소문자, 숫자, 특수기호**를 사용할 수 있으며, :red[특수기호는 적어도 한 개 이상] 사용해야 합니다.")
+            pw = st.text_input("Password를 입력하시오: ")
 
-            # password에 특수문자가 없을 경우 다시 입력하도록 메시지 출력
-            while contains_special_char(pw) == False: 
-                pw = input("특수문자를 포함해서 Password를 다시 적어주세요")
-                if contains_special_char(pw) == True:
-                    break
+            if pw != '':
+                # password에 특수문자가 없을 경우 다시 입력하도록 메시지 출력
+                if contains_special_char(pw) == False: 
+                    st.warning("특수문자를 포함해서 Password를 다시 적어주세요")
+                else:
+                    data[id] = pw
 
-            data[id] = pw
+                    with json_file.open('w+t') as fp:
+                        json.dump(data, fp)
 
-            with json_file.open('w+t') as fp:
-                json.dump(data, fp)
-
-            print("회원가입이 완료되었습니다!")
-            # —> 새로 만든 ID를 곧바로 로그인 상태로 설정
-            id_signin = id
-            print(f"자동으로 '{id}' 계정에 로그인되었습니다.")
-            return id
+                    st.success("회원가입이 완료되었습니다!")
+                    # —> 새로 만든 ID를 곧바로 로그인 상태로 설정
+                    id_signin = id
+                    st.info(f"자동으로 '{id}' 계정에 로그인되었습니다.")
+                    return id
 
 
 def signin():
@@ -103,30 +100,25 @@ def signin():
     with json_file.open('rt') as fp:
         usernames = json.load(fp).keys() #id json 파일
 
-    while True:
-        #json 파일이 존재하면 열기, 존재하지 않으면 json 파일 생성
-        if json_file.exists() and json_file.stat().st_size > 0:
-            with json_file.open('r', encoding='utf-8') as f:
-                data = json.load(f)
-        else:
-            data = {}
-            with json_file.open('w+t') as fp:
-                json.dump(data, fp)
+    #json 파일이 존재하면 열기, 존재하지 않으면 json 파일 생성
+    if json_file.exists() and json_file.stat().st_size > 0:
+        with json_file.open('r', encoding='utf-8') as f:
+            data = json.load(f)
+    else:
+        data = {}
+        with json_file.open('w+t') as fp:
+            json.dump(data, fp)
 
-        id_signin = input("로그인할 아이디를 입력해주세요: ")
+    id_signin = st.text_input("로그인할 아이디를 입력해주세요: ")
+    if id_signin != '':
         if id_signin in usernames:
-            pw_signin = input("비밀번호를 입력해주세요: ")
-            while True:
+            pw_signin = st.text_input("비밀번호를 입력해주세요: ")
+            if pw_signin != '':
                 if pw_signin == data[id_signin]:
-                    print("로그인되었습니다!")
-                    exit_all = True
-                    break
+                    st.success("로그인되었습니다!")
+                    return id_signin
                 else:
-                    pw_signin = input("비밀번호가 틀렸습니다. 다시 입력해주세요: ")
-                    continue
-        if exit_all:
-            return id_signin
+                    st.warning("비밀번호가 틀렸습니다. 다시 입력해주세요: ")
         else:
-            print("존재하지 않는 아이디입니다. 다시 입력해주세요")
-            continue
+            st.warning("존재하지 않는 아이디입니다. 다시 입력해주세요")
         

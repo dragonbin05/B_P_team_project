@@ -5,6 +5,8 @@ import string
 from openai import OpenAI
 from datetime import date, datetime
 import pandas as pd
+import streamlit as st
+from datetime import date, datetime
 
 def find_company_with_LLM(user_input):
     """
@@ -134,36 +136,29 @@ def input_stock():
     반환:
         ticker (str): 최종 확정된 유효 티커 (대문자).
     """
-    while True:
-        stock_name = input("종목명(영어) 또는 티커를 입력하세요: ")
+    stock_name = ""
+    stock_name = st.text_input("종목명(영어) 또는 티커를 입력하세요.")
 
-        if stock_name.lower() == 'exit':
-            return stock_name.lower()
-        elif stock_name == '종료':
-            return stock_name
+    if is_only_english_or_special(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
+        st.warning("입력을 다시 확인해 주세요.")
 
-        if is_only_english_or_special(stock_name) != True: #입력한 문자열이 영어로만 이루어졌는지 확인
-          print("입력을 다시 확인해 주세요.")
-          continue
-
-        result = resolve_to_ticker(stock_name)
-        if result[0] == None:
-            print("입력을 다시 확인해 주세요.")
-            LLM = find_company_with_LLM(result[1])
-            if LLM == None:
-                pass
-            else:
-                print(f"혹시 {LLM}을(를) 찾나요?")
-            continue
+    result = resolve_to_ticker(stock_name)
+    if result[0] == None:
+        st.warning("입력을 다시 확인해 주세요.")
+        LLM = find_company_with_LLM(result[1])
+        if LLM == None:
+            pass
         else:
-          ticker, company_name = result
-          yn = input(f"{ticker}, {company_name}가 맞나요?(Y/N): ").upper()
-          if yn == 'Y':
-              break
-          else:
-              continue
-          
-    return ticker
+            st.write(f"혹시 {LLM}을(를) 찾나요?")
+    else:
+        ticker, company_name = result
+        st.write(f"### {ticker}, {company_name}가 맞나요?")
+        yn = st.button("Yes")
+
+        if yn:
+            return ticker
+        else:
+            st.warning("아닌 경우, 티커를 다시 입력하세요.")
 
 def is_valid_dateformat(date_str: str) -> bool:
     """
@@ -182,65 +177,146 @@ def is_valid_dateformat(date_str: str) -> bool:
     except ValueError:
         return False
 
-def input_stock_data(ticker, status):
+
+def is_valid_dateformat(s: str) -> bool:
+    try:
+        datetime.strptime(s, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
+
+def input_stock_data(ticker: str, status: str, key_prefix: str = "tx"):
     """
-    사용자가 입력한 매수/매도 데이터를 수집하여 리스트로 반환합니다.
-    1) status가 'buy'이면 매수, 'sell'이면 매도로 간주.
-    2) "exit" 또는 "종료" 입력 시 반복 종료.
-    3) 입력 예시: "2025-05-30, 210, 2" -> (ticker, status, date, price, shares)
+    Streamlit 환경에서 주식 거래(매수/매도) 내역을 입력받아 세션에 누적 저장하는 함수이다.
+
+    사용자는 거래 날짜를 YYYYMMDD 형식으로 입력하며,
+    내부적으로 날짜의 유효성을 검증한 후 YYYY-MM-DD 형식으로 변환하여 저장한다.
+    입력은 여러 줄로 가능하며, 각 줄은 하나의 거래를 의미한다.
+
+    입력 형식:
+        YYYYMMDD, price, shares
+        예) 20250530, 210, 2
+
+    주요 기능:
+    1. ticker와 status(buy/sell)에 따라 고유한 session_state 키를 생성하여
+       거래 내역을 세션 단위로 유지한다.
+    2. 여러 줄 입력을 받아 각 줄을 파싱하고 형식·날짜·숫자 유효성을 검증한다.
+    3. 날짜는 2000년 이후이면서 미래 날짜가 아닌 경우만 허용한다.
+    4. 유효한 입력만 (ticker, status, date, price, shares) 형태의 튜플로 저장한다.
+       이때 date는 ISO 형식(YYYY-MM-DD)으로 변환되어 저장된다.
+    5. 현재까지 누적된 거래 내역을 표 형태로 화면에 표시한다.
+    6. '완료(Done)' 버튼 클릭 여부를 함께 반환하여 이후 로직(저장, 페이지 전환 등)에 활용할 수 있다.
 
     매개변수:
-        ticker (str): 대상 티커.
-        status (str): 'buy' 또는 'sell'.
-    반환:
-        stock_data (list of tuples): [(ticker, status, date, price, shares), ...]
+        ticker (str): 거래 대상 주식의 티커(symbol)
+        status (str): 거래 유형 ('buy' 또는 'sell')
+        key_prefix (str): session_state 키 구분을 위한 접두사
+
+    반환값:
+        Tuple[list[tuple], bool]:
+            - 거래 내역 리스트
+              [(ticker, status, 'YYYY-MM-DD', price, shares), ...]
+            - 완료 버튼 클릭 여부 (True / False)
     """
-    stock_data = []
-    if status == 'buy':
-        print(f'{ticker}를 매수한 날짜, 주당 가격($), 수량을 입력하세요. (ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
+    state_key = f"{key_prefix}_{ticker}_{status}"
+    if state_key not in st.session_state:
+        st.session_state[state_key] = []
+
+    action_kr = "매수" if status == "buy" else "매도"
+    st.subheader(f"{ticker} {action_kr} 내역 입력")
+
+    st.info(
+        "형식(format): YYYYMMDD, price, shares\n"
+        "예: 20250530, 210, 2\n"
+        "여러 건은 줄바꿈(newline)으로 입력하세요."
+    )
+
+    raw = st.text_area(
+        "거래 내역(여러 줄 입력 가능)",
+        placeholder="20250530, 210, 2\n20250601, 205.5, 1",
+        key=f"{state_key}_textarea",
+        height=120,
+    )
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        add_clicked = st.button("추가(Add)", key=f"{state_key}_add")
+    with col2:
+        clear_clicked = st.button("초기화(Clear)", key=f"{state_key}_clear")
+    with col3:
+        done_clicked = st.button("완료(Done)", key=f"{state_key}_done")
+
+    if clear_clicked:
+        st.session_state[state_key] = []
+        st.success("입력 내역을 초기화했습니다.")
+
+    if add_clicked:
+        lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+        if not lines:
+            st.warning("입력값이 비어 있습니다.")
+        else:
+            today = date.today()
+            added = 0
+
+            for idx, ln in enumerate(lines, start=1):
+                parts = [x.strip() for x in ln.split(",")]
+                if len(parts) != 3:
+                    st.error(f"{idx}번째 줄 형식 오류: '{ln}'")
+                    continue
+
+                date_raw, price_s, shares_s = parts
+
+                # 날짜 형식 검증 (YYYYMMDD)
+                if len(date_raw) != 8 or not date_raw.isdigit():
+                    st.error(f"{idx}번째 줄 날짜 형식 오류: {date_raw} (YYYYMMDD)")
+                    continue
+
+                y, m, d = int(date_raw[:4]), int(date_raw[4:6]), int(date_raw[6:8])
+
+                # 실제 날짜 유효성 검사
+                try:
+                    dt = date(y, m, d)
+                except ValueError:
+                    st.error(f"{idx}번째 줄 날짜 오류: {date_raw}")
+                    continue
+
+                if y < 2000 or dt > today:
+                    st.error(f"{idx}번째 줄 날짜 범위 오류: {date_raw}")
+                    continue
+
+                # YYYY-MM-DD로 변환
+                date_iso = dt.isoformat()
+
+                # 숫자 변환
+                try:
+                    price = float(price_s)
+                    shares = float(shares_s)
+                except ValueError:
+                    st.error(f"{idx}번째 줄 숫자 오류: price={price_s}, shares={shares_s}")
+                    continue
+
+                # 저장은 ISO 형식
+                st.session_state[state_key].append(
+                    (ticker, status, date_iso, price, shares)
+                )
+                added += 1
+
+            if added > 0:
+                st.success(f"{added}건이 추가되었습니다.")
+
+    if st.session_state[state_key]:
+        st.write("현재 누적된 거래 내역:")
+        st.dataframe(
+            [
+                {"ticker": t, "status": s, "date": ds, "price": p, "shares": sh}
+                for (t, s, ds, p, sh) in st.session_state[state_key]
+            ],
+            use_container_width=True,
+        )
     else:
-        print(f'{ticker}를 매도한 날짜, 주당 가격($), 수량을 입력하세요. (ex) 2025-05-30, 210, 2.\n종료시 \'exit\' 혹은 \'종료\'를 입력하세요')
-    while True:
-        input_value = input('날짜, 주당 가격, 수량: ')
-        
-        if input_value == 'exit' or input_value == '종료' or input_value == 'EXIT':
-            break
-        
-        input_value = [x.strip() for x in input_value.split(',')]
-        if len(input_value) != 3:
-            print("입력을 확인해주세요.")
-            continue
+        st.info("아직 추가된 내역이 없습니다.")
 
-        p = input_value[0].split('-')
-        q = input_value[0]
-        if is_valid_dateformat(q) == False:
-            print("날짜를 다시 입력해주세요")
-            continue
-
-        today = date.today()
-        if int(p[0]) > today.year or int(p[0]) < 2000:
-            print("날짜를 다시 입력해주세요. 이 프로그램은 2000년부터 저장 가능합니다.")
-            continue
-        elif int(p[1]) > 12 or int(p[1]) < 1:
-            print("날짜를 다시 입력해주세요")
-            continue
-        elif int(p[2]) > 31 or int(p[2]) < 1:
-            print("날짜를 다시 입력해주세요")
-            continue
-        elif date.fromisoformat(input_value[0]) > today:
-            print("날짜를 다시 입력해주세요")
-
-
-        date_, price, shares = input_value
-        try:
-            price = float(price)
-            shares = float(shares)
-        except ValueError:
-            print("입력을 확인해주세요")
-            continue
-        stock_data.append((ticker, status, date_, price, shares))
-
-    return stock_data
+    return st.session_state[state_key], done_clicked
 
 def closing_price(ticker, start_date, end_date):
     """
